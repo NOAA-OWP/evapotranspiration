@@ -1,105 +1,80 @@
-#### OWP Open Source Project Template Instructions
+# Basic Model Interface (BMI) for potential evapotranspiration (PET) functions:
+* Aerodynamic method
+* Combination method
+* Energy balance method
+* Penman Monteith method
+* Priestley Taylor method
 
-1. Create a new project.
-2. [Copy these files into the new project](#installation)
-3. Update the README, replacing the contents below as prescribed.
-4. Add any libraries, assets, or hard dependencies whose source code will be included
-   in the project's repository to the _Exceptions_ section in the [TERMS](TERMS.md).
-  - If no exceptions are needed, remove that section from TERMS.
-5. If working with an existing code base, answer the questions on the [open source checklist](opensource-checklist.md)
-6. Delete these instructions and everything up to the _Project Title_ from the README.
-7. Write some great software and tell people about it.
+# The configuration file (./configs/et_config*.txt)
+Many options are available when running this PET module. One option is passed into the executable, and that is the speficif PET method option, the rest are passed in through the configuration file. These include forcing data (type and location), vegetation characteristics, site latitude/longitude/elevation, turbidity roughness and options about the forcings available vs calculated and assumed. Each instance of a PET model should have its own unique configuration file. 
 
-> Keep the README fresh! It's the first thing people see and will make the initial impression.
+# Compiling this code
+The BMI functionality was developed as a standalone module in C. To compile this code the developer used these steps:
+1. `module load gnu/10.1.0`
+2. `gcc -lm ./src/et.c ./src/bmi_et.c -o run_bmi`
+This should generate an executable called **run_bmi**. To run this executable you must pass the path to corresponding to the corresponding configuration file, which includes the PET method you would like to run. Unit tests for those methods, and corresponding are provided, and can be run using:
+1. Energy balance method: `./run_bmi et_config_unit_test1.txt`
+2. Aerodynamic method: `./run_bmi et_config_unit_test2.txt`
+3. Combination method: `./run_bmi et_config_unit_test3.txt`
+4. Priestley Taylor method: `./run_bmi et_config_unit_test4.txt`
+5. Penman Monteith method: `./run_bmi et_config_unit_test5.txt`
+Included in this repository is an environment file (env_cheyenne.sh), and a "make and run" file (make_and_run.sh), which will compile the code and run the five PET methods. If you are on the Cheyenne computer, or if you can modify these files to your machine, you can simply follow these two steps to run this code:
+1. `source env_cheyenne.sh`
+2. `./make_and_run.sh`
 
-## Installation
+# This rough code outline shows approximately what is happening. 
+The `et_bmi.c` file runs BMI functions that initialize, update and finalize an instance of a PET model. It also includes descriptive functions to interpret specifics of the model, such as variable names, units, time/timestep, etc. And it also allows a user (or framework) to get and set values in this model. The `bmi_et.c` code interacts with the `et.c` code, which sets up the model based on the PET method chosen. For instance, the aerodynamic method does not calculate the net radiation before calling the PET subroutine, but the other PET methods do. This et.c file then calls one of the five PET methods available at this time. When the method is called they return a value for PET in m/s, and that is set directly to the BMI model structure.
+![code_flow](./figs/bmi_et.png)
 
-To install all of the template files, run the following script from the root of your project's directory:
+# Notes from author of the PET functions
+evapotranspiration (ET) module,  
+Version 1.0 by Fred L. Ogden, NOAA-NWS-OWP, May, 2020.  
+includes five different methods to clculate ET, from Chow, Maidment & Mays Textbook, and UNFAO Penman-Monteith:  
+1. energy balance method
+2. aerodynamic method
+3. combination method, which combines 1 & 2.
+4. Priestley-Taylor method, which assumes the ratio between 1 & 2, and only calculates 1.
+5. Penman-Monteith method, which requires a value of canopy resistance term, and does not rely on 1 or 2.
+This subroutine requires a considerable amount of meteorological data as input.
+   * a) temperature and (relative-humidity or specific humidity) and the heights at which they are measured.
+   * b) near surface wind speed measurement and the height at which it was measured.
+   * c) the ambient atmospheric temperature lapse rate
+   * d) the fraction of the sky covered by clouds
+   * e) (optional) the height above ground to the cloud base. If not provided, then assumed.
+   * f) the day of the year (1-366) and time of day (UTC only!)
+   * g) the skin temperature of the earth's surface, TODO: should come from another module to calc. soil or veg. temp.
+   * h) the zero-plane roughness height of the atmospheric boundary layer assuming log-law behavior (from land cover)
+   * i) the average root zone soil temperature, or near-surface water temperature in the case of lake evaporation.
+   * j) the incoming solar (shortwave) radiation.  If not provided it is computed from d,e,f, using an updated method similar to the one presented in Bras, R.L. Hydrology.  Requires value of the Linke atmospheric turbidity factor, which varies from 2 for clear mountain air to 5 for smoggy air.  According to Hove & Manyumbu 2012, who calculated values over Zimbabwe that varied from 2.14 to 3.71.  Other values exist in the literature. TODO: This turbidity factor could be calculated from satellite obs. or maybe NOAA already does this? All radiation calculations needed for 1, 3, 4, and 5 require net radiation calculations at the land surface. The net radiation is calculated using a, c, d, e, f, g, j, plus the Linke turbidity factor, which can be estimate from satellite observations.  
+**NOTE THE VALUE OF** evapotranspiration_params.zero_plane_displacement_height COMES FROM LAND COVER DATA.  
+ Taken from:    https://websites.pmc.ucsc.edu/~jnoble/wind/extrap/  
 
-```
-bash -c "$(curl -s https://raw.githubusercontent.com/NOAA-OWP/owp-open-source-project-template/open_source_template.sh)"
-```
+| Roughness class  | Roughness length(m)  | Landscape Type                                                                             |  
+| ---------- | ----------- | ------------------------------------------------------------------------------------------- |  
+| 0         | 0.0002     | Smooth water surface                                                                       |  
+| 0.2       | 0.0005     | Inlet water                                                                                |  
+| 0.5       | 0.0024     | Completely open terrain, smooth surface, e.g. concrete runways in airports, mowed grass, etc.|  
+| 1         | 0.03       | Open agricultural area without fences and hedgerows and very scattered buildings. Only softly rounded hills |  
+| 1.5       | 0.055      | Agricultural land with some houses and 8 metre tall sheltering hedgerows with a distance of approximately 1250 metres |  
+| 2         | 0.1        | Agricultural land with some houses and 8 metre tall sheltering hedgerows with a distance of approximately 500 metres |  
+| 2.5       | 0.2        | Agricultural land with many houses, shrubs and plants, or 8 metre tall sheltering hedgerows with a distance of approximately 250 metres |  
+| 3         | 0.4        | Villages, small towns, agricultural land with many or tall sheltering hedgerows, forests and very rough and uneven terrain |  
+| 3.5       | 0.8        | Larger cities with tall buildings|  
+| 4         | 1.6        | Very large cities with tall buildings and skyscrapers|  
 
-----
+Roughness definitions according to the European Wind Atlas.  
+According to the UN FAO Penman-Monteith example here: http://www.fao.org/3/X0490E/x0490e06.htm#aerodynamic%20resistance%20(ra)  
+The zero plane roughness length,"d" can be approximated as 2/3 of the vegetation height (H): d=2/3*H.  
+The momentum roughness height "zom" can be estimated as 0.123*H.  
+The heat transfer roughness height "zoh" can be approximated as 0.1 * zom.  
 
-# Project Title
+# A note on code adaptation for BMI
+This code was minimally changed from the author's original version. These minor changes were made by NGen NWM formulation team:
+* Much of this C code was moved to `*.h` files, with the intention of being more easily integrated into the NGen Framework. It turned out that this step was not stricktly neccessary, and that this standalone module could use the standard `*.c` files. See known issues below for a discussion on turning these back to `*.c` files.
+* At one point the C code was slightly modified to compile as C++ code. This was intended for easier integration with the NGen Framework. This was reversed when developed as a standalone module.
+* Functions that are neccessary for PET calculations, but are not part of an individual method (e.g., `calculate_solar_radiation`), were moved to this file: `./include/et_tools.h`
+* The PET code was split up so that the functions were in standalone files, and they could be called independently. An example: `EtPenmanMonteithMethod.h`
+* Variables within the PET functions (e.g., `psychrometric_constant_Pa_per_C`) are passed as part of the model structure (e.g., `model->inter_vars.psychrometric_constant_Pa_per_C`)
 
-**Description**:  Put a meaningful, short, plain-language description of what
-this project is trying to accomplish and why it matters.
-Describe the problem(s) this project solves.
-Describe how this software can improve the lives of its audience.
-
-Other things to include:
-
-  - **Technology stack**: Indicate the technological nature of the software, including primary programming language(s) and whether the software is intended as standalone or as a module in a framework or other ecosystem.
-  - **Status**:  Alpha, Beta, 1.1, etc. It's OK to write a sentence, too. The goal is to let interested people know where this project is at. This is also a good place to link to the [CHANGELOG](CHANGELOG.md).
-  - **Links to production or demo instances**
-  - Describe what sets this apart from related-projects. Linking to another doc or page is OK if this can't be expressed in a sentence or two.
-
-
-**Screenshot**: If the software has visual components, place a screenshot after the description; e.g.,
-
-![](https://raw.githubusercontent.com/NOAA-OWP/owp-open-source-project-template/master/doc/Screenshot.png)
-
-
-## Dependencies
-
-Describe any dependencies that must be installed for this software to work.
-This includes programming languages, databases or other storage mechanisms, build tools, frameworks, and so forth.
-If specific versions of other software are required, or known not to work, call that out.
-
-## Installation
-
-Detailed instructions on how to install, configure, and get the project running.
-This should be frequently tested to ensure reliability. Alternatively, link to
-a separate [INSTALL](INSTALL.md) document.
-
-## Configuration
-
-If the software is configurable, describe it in detail, either here or in other documentation to which you link.
-
-## Usage
-
-Show users how to use the software.
-Be specific.
-Use appropriate formatting when showing code snippets.
-
-## How to test the software
-
-If the software includes automated tests, detail how to run those tests.
-
-## Known issues
-
-Document any known significant shortcomings with the software.
-
-## Getting help
-
-Instruct users how to get help with this software; this might include links to an issue tracker, wiki, mailing list, etc.
-
-**Example**
-
-If you have questions, concerns, bug reports, etc, please file an issue in this repository's Issue Tracker.
-
-## Getting involved
-
-This section should detail why people should get involved and describe key areas you are
-currently focusing on; e.g., trying to get feedback on features, fixing certain bugs, building
-important pieces, etc.
-
-General instructions on _how_ to contribute should be stated with a link to [CONTRIBUTING](CONTRIBUTING.md).
-
-
-----
-
-## Open source licensing info
-1. [TERMS](TERMS.md)
-2. [LICENSE](LICENSE)
-
-
-----
-
-## Credits and references
-
-1. Projects that inspired you
-2. Related projects
-3. Books, papers, talks, or other sources that have meaningful impact or influence on this project
+# Code issues as of May 5th 2021
+* Much of this code was moved from a single original `*.c` file to several `*.h` files, for easier integration into the NGen Framework. This is likely not the best practice, and should probably be reversed, so that functional code is stored in `*.c` files and declarations are stored in `*.h` files.
