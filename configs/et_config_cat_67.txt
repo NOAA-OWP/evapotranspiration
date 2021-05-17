@@ -16,6 +16,6 @@ cloud_base_height_known=FALSE
 latitude_degrees=37.25
 longitude_degrees=-97.5554
 site_elevation_m=303.33
-time_step_size=3600
+time_step_size_s=3600
 num_timesteps=720
 shortwave_radiation_provided=0

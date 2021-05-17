@@ -83,7 +83,7 @@ Initialize (Bmi *self, const char *cfg_file)
         for (int i = 0; i < et->bmi.num_timesteps; i++) {
             fgets(line_str, max_forcing_line_length + 1, ffp);  // read in a line of AORC data.
             parse_aorc_line_et(line_str, &year, &month, &day, &hour, &minute, &dsec, &forcings);
-            et->forcing_data_precip_kg_per_m2[i] = forcings.precip_kg_per_m2 * ((float)et->bmi.time_step_size);
+            et->forcing_data_precip_kg_per_m2[i] = forcings.precip_kg_per_m2 * ((float)et->bmi.time_step_size_s);
             if (et->bmi.verbose >4)
                 printf("precip %f \n", et->forcing_data_precip_kg_per_m2[i]);
             et->forcing_data_surface_pressure_Pa[i] = forcings.surface_pressure_Pa;
@@ -133,9 +133,9 @@ Update (Bmi *self)
   
     run_et(et);
 
-    et->bmi.current_time_step += et->bmi.time_step_size; // Seconds since start of run
+    et->bmi.current_time_step += et->bmi.time_step_size_s; // Seconds since start of run
     et->bmi.current_step +=1;                            // time steps since start of run
-    et->bmi.current_time += et->bmi.time_step_size;   // Seconds since 1970
+    et->bmi.current_time += et->bmi.time_step_size_s;   // Seconds since 1970
 
     return BMI_SUCCESS;
 }
@@ -208,7 +208,7 @@ Update_until(Bmi *self, double t)
         int future_time_step = et->bmi.current_time_step;
         double future_time_step_time = current_time;
         while (future_time_step < et->bmi.num_timesteps && future_time_step_time < end_time) {
-            future_time_step_time += et->bmi.time_step_size;
+            future_time_step_time += et->bmi.time_step_size_s;
             if (future_time_step_time == t) {
                 is_exact_future_time = TRUE;
                 break;
@@ -432,7 +432,7 @@ static int Get_end_time (Bmi *self, double * time)
   Get_start_time(self, time);
 
   *time += (((et_model *) self->data)->bmi.num_timesteps * 
-            ((et_model *) self->data)->bmi.time_step_size);
+            ((et_model *) self->data)->bmi.time_step_size_s);
 
   return BMI_SUCCESS;
 }
@@ -442,7 +442,7 @@ static int Get_end_time (Bmi *self, double * time)
 
 static int Get_time_step (Bmi *self, double * dt)
 {
-    *dt = ((et_model *) self->data)->bmi.time_step_size;
+    *dt = ((et_model *) self->data)->bmi.time_step_size_s;
     return BMI_SUCCESS;
 }
 
@@ -461,7 +461,7 @@ static int Get_current_time (Bmi *self, double * time)
         printf("Current model time step: '%ld'\n", ((et_model *) self->data)->bmi.current_time_step);
     }
     *time += (((et_model *) self->data)->bmi.current_step * 
-              ((et_model *) self->data)->bmi.time_step_size);
+              ((et_model *) self->data)->bmi.time_step_size_s);
     return BMI_SUCCESS;
 } // end Get_current_time
 
@@ -688,11 +688,11 @@ int read_init_config_et(et_model* model, const char* config_file)//,
             }
             continue;
         }
-        if (strcmp(param_key, "time_step_size") == 0) {
-            model->bmi.time_step_size = strtod(param_value, NULL);
+        if (strcmp(param_key, "time_step_size_s") == 0) {
+            model->bmi.time_step_size_s = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
-                printf("time_step_size from config file \n");
-                printf("%d\n", model->bmi.time_step_size);
+                printf("time_step_size_s from config file \n");
+                printf("%d\n", model->bmi.time_step_size_s);
             }
             continue;
         }
