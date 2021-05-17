@@ -563,6 +563,7 @@ int read_init_config_et(et_model* model, const char* config_file)//,
                 printf("printing a lot of stuff (level > 2) for unit tests and troubleshooting \n");
             }
         }
+        // jmframe: this should be strtol instead of strtod
         if (strcmp(param_key, "et_method") == 0){
             model->et_method = strtod(param_value, NULL);
             if(model->bmi.verbose > 1){

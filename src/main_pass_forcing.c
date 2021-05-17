@@ -5,8 +5,8 @@
 #include "../include/et.h"
 #include "../include/bmi_et.h"
 
-#include "../../aorc-bmi/include/aorc.h"
-#include "../../aorc-bmi/include/bmi_aorc.h"
+#include "../../AORC/include/aorc.h"
+#include "../../AORC/include/bmi_aorc.h"
 
 /***************************************************************
     Function to pass the forcing data from AORC to ET using BMI.
