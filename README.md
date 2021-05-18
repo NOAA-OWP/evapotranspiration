@@ -5,26 +5,26 @@
 * Penman Monteith method
 * Priestley Taylor method
 
-# The configuration file (./configs/et_config*.txt)
+# The configuration file (./configs/pet_config*.txt)
 Many options are available when running this PET module. One option is passed into the executable, and that is the speficif PET method option, the rest are passed in through the configuration file. These include forcing data (type and location), vegetation characteristics, site latitude/longitude/elevation, turbidity roughness and options about the forcings available vs calculated and assumed. Each instance of a PET model should have its own unique configuration file. 
 
 # Compiling this code
 The BMI functionality was developed as a standalone module in C. To compile this code the developer used these steps:
 1. `module load gnu/10.1.0`
-2. `gcc -lm ./src/et.c ./src/bmi_et.c -o run_bmi`
+2. `gcc -lm ./src/pet.c ./src/bmi_pet.c -o run_bmi`
 This should generate an executable called **run_bmi**. To run this executable you must pass the path to corresponding to the corresponding configuration file, which includes the PET method you would like to run. Unit tests for those methods, and corresponding are provided, and can be run using:
-1. Energy balance method: `./run_bmi et_config_unit_test1.txt`
-2. Aerodynamic method: `./run_bmi et_config_unit_test2.txt`
-3. Combination method: `./run_bmi et_config_unit_test3.txt`
-4. Priestley Taylor method: `./run_bmi et_config_unit_test4.txt`
-5. Penman Monteith method: `./run_bmi et_config_unit_test5.txt`
+1. Energy balance method: `./run_bmi pet_config_unit_test1.txt`
+2. Aerodynamic method: `./run_bmi pet_config_unit_test2.txt`
+3. Combination method: `./run_bmi pet_config_unit_test3.txt`
+4. Priestley Taylor method: `./run_bmi pet_config_unit_test4.txt`
+5. Penman Monteith method: `./run_bmi pet_config_unit_test5.txt`
 Included in this repository is an environment file (env_cheyenne.sh), and a "make and run" file (make_and_run.sh), which will compile the code and run the five PET methods. If you are on the Cheyenne computer, or if you can modify these files to your machine, you can simply follow these two steps to run this code:
 1. `source env_cheyenne.sh`
 2. `./make_and_run.sh`
 
 # This rough code outline shows approximately what is happening. 
-The `et_bmi.c` file runs BMI functions that initialize, update and finalize an instance of a PET model. It also includes descriptive functions to interpret specifics of the model, such as variable names, units, time/timestep, etc. And it also allows a user (or framework) to get and set values in this model. The `bmi_et.c` code interacts with the `et.c` code, which sets up the model based on the PET method chosen. For instance, the aerodynamic method does not calculate the net radiation before calling the PET subroutine, but the other PET methods do. This et.c file then calls one of the five PET methods available at this time. When the method is called they return a value for PET in m/s, and that is set directly to the BMI model structure.
-![code_flow](./figs/bmi_et.png)
+The `pet_bmi.c` file runs BMI functions that initialize, update and finalize an instance of a PET model. It also includes descriptive functions to interpret specifics of the model, such as variable names, units, time/timestep, etc. And it also allows a user (or framework) to get and set values in this model. The `bmi_pet.c` code interacts with the `pet.c` code, which sets up the model based on the PET method chosen. For instance, the aerodynamic method does not calculate the net radiation before calling the PET subroutine, but the other PET methods do. This pet.c file then calls one of the five PET methods available at this time. When the method is called they return a value for PET in m/s, and that is set directly to the BMI model structure.
+![code_flow](./figs/bmi_pet.png)
 
 # Notes from author of the PET functions
 evapotranspiration (ET) module,  
@@ -72,7 +72,7 @@ The heat transfer roughness height "zoh" can be approximated as 0.1 * zom.
 This code was minimally changed from the author's original version. These minor changes were made by NGen NWM formulation team:
 * Much of this C code was moved to `*.h` files, with the intention of being more easily integrated into the NGen Framework. It turned out that this step was not stricktly neccessary, and that this standalone module could use the standard `*.c` files. See known issues below for a discussion on turning these back to `*.c` files.
 * At one point the C code was slightly modified to compile as C++ code. This was intended for easier integration with the NGen Framework. This was reversed when developed as a standalone module.
-* Functions that are neccessary for PET calculations, but are not part of an individual method (e.g., `calculate_solar_radiation`), were moved to this file: `./include/et_tools.h`
+* Functions that are neccessary for PET calculations, but are not part of an individual method (e.g., `calculate_solar_radiation`), were moved to this file: `./include/pet_tools.h`
 * The PET code was split up so that the functions were in standalone files, and they could be called independently. An example: `EtPenmanMonteithMethod.h`
 * Variables within the PET functions (e.g., `psychrometric_constant_Pa_per_C`) are passed as part of the model structure (e.g., `model->inter_vars.psychrometric_constant_Pa_per_C`)
 
