@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "../include/et.h"
+#include "../include/pet.h"
 #include "../include/bmi.h"
-#include "../include/bmi_et.h"
+#include "../include/bmi_pet.h"
 
 #define INPUT_VAR_NAME_COUNT 8 // All the forcings? 
 #define OUTPUT_VAR_NAME_COUNT 1 // water_potential_evaporation_flux; 
@@ -12,60 +12,60 @@ static int
 Initialize (Bmi *self, const char *cfg_file)
 {
     
-    et_model *et;
-    et = (et_model *) self->data;
+    pet_model *pet;
+    pet = (pet_model *) self->data;
     
-    int config_read_result = read_init_config_et(et, cfg_file);
+    int config_read_result = read_init_config_pet(pet, cfg_file);
     if (config_read_result == BMI_FAILURE)
         return BMI_FAILURE;
 
-    et_setup(et);
+    pet_setup(pet);
 
-    if (et->bmi.verbose >1)
-        printf("BMI Initialization ET ... setup just finished \n");
+    if (pet->bmi.verbose >1)
+        printf("BMI Initialization PET ... setup just finished \n");
     
     /*
         We might be taking forcing data from the framework via BMI.
         Or we might be reading in our own forcing data. 
         We need a logical function to determin this functionality.
-        We will use the et->bmi.is_forcing_from_bmi as the boolean option.
-        That should be determined in et_setup.
+        We will use the pet->bmi.is_forcing_from_bmi as the boolean option.
+        That should be determined in pet_setup.
     */
-    if (et->bmi.is_forcing_from_bmi == 1)
-        if (et->bmi.verbose>1)
+    if (pet->bmi.is_forcing_from_bmi == 1)
+        if (pet->bmi.verbose>1)
             printf("Using BMI to pass in forcing data, not reading in forcing from file.\n");
-    if (et->bmi.is_forcing_from_bmi == 0){
-        if (et->bmi.verbose>1)
-            printf("Reading in forcing from file. %s\n", et->forcing_file);
+    if (pet->bmi.is_forcing_from_bmi == 0){
+        if (pet->bmi.verbose>1)
+            printf("Reading in forcing from file. %s\n", pet->forcing_file);
 
         // Figure out the number of lines first (also char count)
         int forcing_line_count, max_forcing_line_length;
-        int count_result = read_file_line_counts_et(et->forcing_file, &forcing_line_count, &max_forcing_line_length);
+        int count_result = read_file_line_counts_pet(pet->forcing_file, &forcing_line_count, &max_forcing_line_length);
         if (count_result == -1) {
-            printf("Configured forcing file '%s' could not be opened for reading\n", et->forcing_file);
+            printf("Configured forcing file '%s' could not be opened for reading\n", pet->forcing_file);
             return BMI_FAILURE;
         }
         if (forcing_line_count == 1) {
-            printf("Invalid header-only forcing file '%s'\n", et->forcing_file);
+            printf("Invalid header-only forcing file '%s'\n", pet->forcing_file);
             return BMI_FAILURE;
         }
     
         // Now initialize empty arrays that depend on number of time steps
-        et->forcing_data_precip_kg_per_m2 = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_surface_pressure_Pa = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_time = malloc(sizeof(long) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_incoming_shortwave_W_per_m2 = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_incoming_longwave_W_per_m2 = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_specific_humidity_2m_kg_per_kg = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_air_temperature_2m_K = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_u_wind_speed_10m_m_per_s = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
-        et->forcing_data_v_wind_speed_10m_m_per_s = malloc(sizeof(double) * (et->bmi.num_timesteps + 1));
+        pet->forcing_data_precip_kg_per_m2 = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_surface_pressure_Pa = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_time = malloc(sizeof(long) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_incoming_shortwave_W_per_m2 = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_incoming_longwave_W_per_m2 = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_specific_humidity_2m_kg_per_kg = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_air_temperature_2m_K = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_u_wind_speed_10m_m_per_s = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
+        pet->forcing_data_v_wind_speed_10m_m_per_s = malloc(sizeof(double) * (pet->bmi.num_timesteps + 1));
     
         // Now open it again to read the forcings
-        FILE* ffp = fopen(et->forcing_file, "r");
+        FILE* ffp = fopen(pet->forcing_file, "r");
         // Ensure still exists
         if (ffp == NULL) {
-            printf("Forcing file '%s' disappeared!", et->forcing_file);
+            printf("Forcing file '%s' disappeared!", pet->forcing_file);
             return BMI_FAILURE;
         }
     
@@ -76,49 +76,49 @@ Initialize (Bmi *self, const char *cfg_file)
         // First read the header line
         fgets(line_str, max_forcing_line_length + 1, ffp);
     
-        if (et->bmi.verbose > 2) 
-            printf("the number of time steps from the forcing file is: %8.6e \n", et->bmi.num_timesteps);
+        if (pet->bmi.verbose > 2) 
+            printf("the number of time steps from the forcing file is: %8.6e \n", pet->bmi.num_timesteps);
     
-        aorc_forcing_data_et forcings;
-        for (int i = 0; i < et->bmi.num_timesteps; i++) {
+        aorc_forcing_data_pet forcings;
+        for (int i = 0; i < pet->bmi.num_timesteps; i++) {
             fgets(line_str, max_forcing_line_length + 1, ffp);  // read in a line of AORC data.
-            parse_aorc_line_et(line_str, &year, &month, &day, &hour, &minute, &dsec, &forcings);
-            et->forcing_data_precip_kg_per_m2[i] = forcings.precip_kg_per_m2 * ((float)et->bmi.time_step_size_s);
-            if (et->bmi.verbose >4)
-                printf("precip %f \n", et->forcing_data_precip_kg_per_m2[i]);
-            et->forcing_data_surface_pressure_Pa[i] = forcings.surface_pressure_Pa;
-            if (et->bmi.verbose >4)
-                printf("surface pressure %f \n", et->forcing_data_surface_pressure_Pa[i]);
-            et->forcing_data_incoming_longwave_W_per_m2[i] = forcings.incoming_longwave_W_per_m2;
-            if (et->bmi.verbose >4)
-                printf("longwave %f \n", et->forcing_data_incoming_longwave_W_per_m2[i]);
-            et->forcing_data_incoming_shortwave_W_per_m2[i] = forcings.incoming_shortwave_W_per_m2;
-            if (et->bmi.verbose >4)
-                printf("shortwave %f \n", et->forcing_data_incoming_shortwave_W_per_m2[i]);
-            et->forcing_data_specific_humidity_2m_kg_per_kg[i] = forcings.specific_humidity_2m_kg_per_kg;
-            if (et->bmi.verbose >4)
-                printf("humidity %f \n", et->forcing_data_specific_humidity_2m_kg_per_kg[i]);
-            et->forcing_data_air_temperature_2m_K[i] = forcings.air_temperature_2m_K;
-            if (et->bmi.verbose >4)
-                printf("air temperature %f \n", et->forcing_data_air_temperature_2m_K[i]);
-            et->forcing_data_u_wind_speed_10m_m_per_s[i] = forcings.u_wind_speed_10m_m_per_s;
-            if (et->bmi.verbose >4)
-                printf("u wind speed %f \n", et->forcing_data_u_wind_speed_10m_m_per_s[i]);
-            et->forcing_data_v_wind_speed_10m_m_per_s[i] = forcings.v_wind_speed_10m_m_per_s;
-            if (et->bmi.verbose >4)
-                printf("v wind speed %f \n", et->forcing_data_v_wind_speed_10m_m_per_s[i]);
+            parse_aorc_line_pet(line_str, &year, &month, &day, &hour, &minute, &dsec, &forcings);
+            pet->forcing_data_precip_kg_per_m2[i] = forcings.precip_kg_per_m2 * ((float)pet->bmi.time_step_size_s);
+            if (pet->bmi.verbose >4)
+                printf("precip %f \n", pet->forcing_data_precip_kg_per_m2[i]);
+            pet->forcing_data_surface_pressure_Pa[i] = forcings.surface_pressure_Pa;
+            if (pet->bmi.verbose >4)
+                printf("surface pressure %f \n", pet->forcing_data_surface_pressure_Pa[i]);
+            pet->forcing_data_incoming_longwave_W_per_m2[i] = forcings.incoming_longwave_W_per_m2;
+            if (pet->bmi.verbose >4)
+                printf("longwave %f \n", pet->forcing_data_incoming_longwave_W_per_m2[i]);
+            pet->forcing_data_incoming_shortwave_W_per_m2[i] = forcings.incoming_shortwave_W_per_m2;
+            if (pet->bmi.verbose >4)
+                printf("shortwave %f \n", pet->forcing_data_incoming_shortwave_W_per_m2[i]);
+            pet->forcing_data_specific_humidity_2m_kg_per_kg[i] = forcings.specific_humidity_2m_kg_per_kg;
+            if (pet->bmi.verbose >4)
+                printf("humidity %f \n", pet->forcing_data_specific_humidity_2m_kg_per_kg[i]);
+            pet->forcing_data_air_temperature_2m_K[i] = forcings.air_temperature_2m_K;
+            if (pet->bmi.verbose >4)
+                printf("air temperature %f \n", pet->forcing_data_air_temperature_2m_K[i]);
+            pet->forcing_data_u_wind_speed_10m_m_per_s[i] = forcings.u_wind_speed_10m_m_per_s;
+            if (pet->bmi.verbose >4)
+                printf("u wind speed %f \n", pet->forcing_data_u_wind_speed_10m_m_per_s[i]);
+            pet->forcing_data_v_wind_speed_10m_m_per_s[i] = forcings.v_wind_speed_10m_m_per_s;
+            if (pet->bmi.verbose >4)
+                printf("v wind speed %f \n", pet->forcing_data_v_wind_speed_10m_m_per_s[i]);
     
     
-            et->forcing_data_time[i] = forcings.time;
+            pet->forcing_data_time[i] = forcings.time;
             if (i == 0)
-                et->bmi.current_time =forcings.time;
+                pet->bmi.current_time =forcings.time;
         }
     }
 
     // Set the current time step to the first idem in the forcing time series.
     // But should this be an option? Would we ever initialize to a point in the
     //     middle of a forcing file?
-    et->bmi.current_step = 0;
+    pet->bmi.current_step = 0;
 
     return BMI_SUCCESS;
 }
@@ -126,16 +126,16 @@ Initialize (Bmi *self, const char *cfg_file)
 static int 
 Update (Bmi *self)
 {
-    et_model *et = (et_model *) self->data;
+    pet_model *pet = (pet_model *) self->data;
   
-    if (et->bmi.verbose >1)
-      printf("BMI Update ET ...\n");
+    if (pet->bmi.verbose >1)
+      printf("BMI Update PET ...\n");
   
-    run_et(et);
+    run_pet(pet);
 
-    et->bmi.current_time_step += et->bmi.time_step_size_s; // Seconds since start of run
-    et->bmi.current_step +=1;                            // time steps since start of run
-    et->bmi.current_time += et->bmi.time_step_size_s;   // Seconds since 1970
+    pet->bmi.current_time_step += pet->bmi.time_step_size_s; // Seconds since start of run
+    pet->bmi.current_step +=1;                            // time steps since start of run
+    pet->bmi.current_time += pet->bmi.time_step_size_s;   // Seconds since 1970
 
     return BMI_SUCCESS;
 }
@@ -144,12 +144,12 @@ static int
 Update_until(Bmi *self, double t)
 {
 
-    et_model* et = ((et_model *) self->data);
+    pet_model* pet = ((pet_model *) self->data);
     
     // Since this model's time units are seconds, it is assumed that the param is either a valid time in seconds, a
     // relative number of time steps into the future, or invalid
 
-    if (et->bmi.verbose >= 1)
+    if (pet->bmi.verbose >= 1)
         printf("running update until time %lld \n", t);
 
     // Don't support negative parameter values
@@ -157,24 +157,24 @@ Update_until(Bmi *self, double t)
         return BMI_FAILURE;
 
     // jmframe troubleshooting. delete this printout
-    if (et->bmi.verbose > 3)
+    if (pet->bmi.verbose > 3)
         printf("t is greater than zero, please delete this printout\n");
 
     // Don't continue if current time is at or beyond end time (or we can't determine this)
-    double current_time = et->bmi.current_time_step;
+    double current_time = pet->bmi.current_time_step;
     double end_time = 0;
     int current_time_result = self->get_current_time(self, &current_time);
     if (current_time_result == BMI_FAILURE)
         return BMI_FAILURE;
 
     // jmframe troubleshooting. delete this printout
-    if (et->bmi.verbose > 3)
+    if (pet->bmi.verbose > 3)
         printf("passed current time result, please delete this printout\n");
 
     int end_time_result = self->get_end_time(self, &end_time);
 
     // jmframe troubleshooting. Please delete this printout
-    if (et->bmi.verbose > 3){
+    if (pet->bmi.verbose > 3){
         printf("end time %8.6e, please delete this printout\n", &end_time);
         printf("the current time is %8.6e \n", current_time);
         printf("the end time result is %d \n", end_time_result);
@@ -190,7 +190,7 @@ Update_until(Bmi *self, double t)
     }
 
     // jmframe troubleshooting. Please delete this printout
-    if (et->bmi.verbose > 3)
+    if (pet->bmi.verbose > 3)
         printf("passed end time result, please delete this printout\n");
 
     // Handle easy case of t == current_time by just returning success
@@ -198,17 +198,17 @@ Update_until(Bmi *self, double t)
         return BMI_SUCCESS;
 
     // jmframe troubleshooting. Please delete this printout
-    if (et->bmi.verbose > 3)
+    if (pet->bmi.verbose > 3)
         printf("About to extract future time, please delete this printout\n");
 
     // First, determine if t is some future time that will be arrived at exactly after some number of future time steps
     int is_exact_future_time = (t == end_time) ? TRUE : FALSE;
     // Compare to time step endings unless obvious that t lines up (i.e., t == end_time) or doesn't (t <= current_time)
     if (is_exact_future_time == FALSE && t > current_time) {
-        int future_time_step = et->bmi.current_time_step;
+        int future_time_step = pet->bmi.current_time_step;
         double future_time_step_time = current_time;
-        while (future_time_step < et->bmi.num_timesteps && future_time_step_time < end_time) {
-            future_time_step_time += et->bmi.time_step_size_s;
+        while (future_time_step < pet->bmi.num_timesteps && future_time_step_time < end_time) {
+            future_time_step_time += pet->bmi.time_step_size_s;
             if (future_time_step_time == t) {
                 is_exact_future_time = TRUE;
                 break;
@@ -217,7 +217,7 @@ Update_until(Bmi *self, double t)
     }
 
     // jmframe troubleshooting. Please delete
-    if (et->bmi.verbose > 3)
+    if (pet->bmi.verbose > 3)
         printf("Extracted future time, please delete this printout\n");
 
     // If it is an exact time, advance to that time step
@@ -229,10 +229,10 @@ Update_until(Bmi *self, double t)
             self->update(self);
             
             // jmframe troubleshooting. Please delete
-            if (et->bmi.verbose > 3){
-                printf("current time step %f \n", et->bmi.current_time_step);
-                printf("current step %f \n", et->bmi.current_step);
-                printf("current time %f \n", et->bmi.current_time);
+            if (pet->bmi.verbose > 3){
+                printf("current time step %f \n", pet->bmi.current_time_step);
+                printf("current step %f \n", pet->bmi.current_step);
+                printf("current time %f \n", pet->bmi.current_time);
             }
 
         }
@@ -240,7 +240,7 @@ Update_until(Bmi *self, double t)
     }
 
     // jmframe troubleshooting. Please delete
-    if (et->bmi.verbose > 3)
+    if (pet->bmi.verbose > 3)
         printf("Checked if exact time, please delete this printout \n");
 
     // If t is not an exact time, it could be a number of time step forward to proceed
@@ -251,16 +251,16 @@ Update_until(Bmi *self, double t)
         return BMI_FAILURE;
 
     // jmframe troubleshooting. Please delete
-    if (et->bmi.verbose > 3)
+    if (pet->bmi.verbose > 3)
         printf("Checked setting t_int to t, please delete this line \n");
 
     // Keep in mind the current_time_step hasn't been processed yet (hence, using <= for this test)
     // E.g., if (unprocessed) current_time_step = 0, t = 2, num_timesteps = 2, this is valid a valid t (run 0, run 1)
-    if ((et->bmi.current_step + t_int) <= et->bmi.num_timesteps) {
+    if ((pet->bmi.current_step + t_int) <= pet->bmi.num_timesteps) {
         for (int i = 0; i < t_int; i++){
 
             // jmframe troubleshooting. Please delete
-            if (et->bmi.verbose > 3)
+            if (pet->bmi.verbose > 3)
                 printf("Updating PET with time step\n");
             
             // Call the update function, instead of run
@@ -268,10 +268,10 @@ Update_until(Bmi *self, double t)
             self->update(self);
 
             // jmframe troubleshooting. Please delete
-            if (et->bmi.verbose > 3){
-                printf("current time step %f \n", et->bmi.current_time_step);
-                printf("current step %ld \n", et->bmi.current_step);
-                printf("current time %f \n", et->bmi.current_time);
+            if (pet->bmi.verbose > 3){
+                printf("current time step %f \n", pet->bmi.current_time_step);
+                printf("current step %ld \n", pet->bmi.current_step);
+                printf("current time %f \n", pet->bmi.current_time);
             }
         } // end time loop
         return BMI_SUCCESS;
@@ -282,11 +282,11 @@ Update_until(Bmi *self, double t)
     
 }
 
-et_model *
-new_bmi_et()
+pet_model *
+new_bmi_pet()
 {
-    et_model *data;
-    data = (et_model*) malloc(sizeof(et_model));
+    pet_model *data;
+    data = (pet_model*) malloc(sizeof(pet_model));
 
     return data;
 }
@@ -296,13 +296,13 @@ Finalize (Bmi *self)
 {
 
   // Perform Unit Tests, if set in config file.
-  et_model *et = (et_model *) self->data;
-  if (et->bmi.run_unit_tests == 1)
-    et_unit_tests(et);
+  pet_model *pet = (pet_model *) self->data;
+  if (pet->bmi.run_unit_tests == 1)
+    pet_unit_tests(pet);
 
   if (self){
-    et_model* model = (et_model *)(self->data);
-    self->data = (void*)new_bmi_et();
+    pet_model* model = (pet_model *)(self->data);
+    self->data = (void*)new_bmi_pet();
   }
   return BMI_SUCCESS;
 }
@@ -431,8 +431,8 @@ static int Get_end_time (Bmi *self, double * time)
   
   Get_start_time(self, time);
 
-  *time += (((et_model *) self->data)->bmi.num_timesteps * 
-            ((et_model *) self->data)->bmi.time_step_size_s);
+  *time += (((pet_model *) self->data)->bmi.num_timesteps * 
+            ((pet_model *) self->data)->bmi.time_step_size_s);
 
   return BMI_SUCCESS;
 }
@@ -442,7 +442,7 @@ static int Get_end_time (Bmi *self, double * time)
 
 static int Get_time_step (Bmi *self, double * dt)
 {
-    *dt = ((et_model *) self->data)->bmi.time_step_size_s;
+    *dt = ((pet_model *) self->data)->bmi.time_step_size_s;
     return BMI_SUCCESS;
 }
 
@@ -457,11 +457,11 @@ static int Get_time_units (Bmi *self, char * units)
 static int Get_current_time (Bmi *self, double * time)
 {
     Get_start_time(self, time);
-    if (((et_model *) self->data)->bmi.verbose > 2){
-        printf("Current model time step: '%ld'\n", ((et_model *) self->data)->bmi.current_time_step);
+    if (((pet_model *) self->data)->bmi.verbose > 2){
+        printf("Current model time step: '%ld'\n", ((pet_model *) self->data)->bmi.current_time_step);
     }
-    *time += (((et_model *) self->data)->bmi.current_step * 
-              ((et_model *) self->data)->bmi.time_step_size_s);
+    *time += (((pet_model *) self->data)->bmi.current_step * 
+              ((pet_model *) self->data)->bmi.time_step_size_s);
     return BMI_SUCCESS;
 } // end Get_current_time
 
@@ -484,7 +484,7 @@ static int count_delimited_values(char* string_val, char* delimiter)
 } //end count_delimited_values
 
 //---------------------------------------------------------------------------------------------------------------------
-int read_file_line_counts_et(const char* file_name, int* line_count, int* max_line_length)
+int read_file_line_counts_pet(const char* file_name, int* line_count, int* max_line_length)
 {
 
     *line_count = 0;
@@ -493,7 +493,7 @@ int read_file_line_counts_et(const char* file_name, int* line_count, int* max_li
     FILE* fp = fopen(file_name, "r");
     // Ensure exists
     if (fp == NULL) {
-        printf("File does not exist.\n Failed in function read_file_line_counts_et\n");
+        printf("File does not exist.\n Failed in function read_file_line_counts_pet\n");
         return -1;
     }
     int seen_non_whitespace = 0;
@@ -529,11 +529,11 @@ int read_file_line_counts_et(const char* file_name, int* line_count, int* max_li
 }  // end: read_file_line_counts
 
 //---------------------------------------------------------------------------------------------------------------------
-int read_init_config_et(et_model* model, const char* config_file)//,
+int read_init_config_pet(pet_model* model, const char* config_file)//,
 {
     int config_line_count, max_config_line_length;
     // Note that this determines max line length including the ending return character, if present
-    int count_result = read_file_line_counts_et(config_file, &config_line_count, &max_config_line_length);
+    int count_result = read_file_line_counts_pet(config_file, &config_line_count, &max_config_line_length);
     if (count_result == -1) {
         return BMI_FAILURE;
     }
@@ -564,18 +564,18 @@ int read_init_config_et(et_model* model, const char* config_file)//,
             }
         }
         // jmframe: this should be strtol instead of strtod
-        if (strcmp(param_key, "et_method") == 0){
-            model->et_method = strtod(param_value, NULL);
+        if (strcmp(param_key, "pet_method") == 0){
+            model->pet_method = strtod(param_value, NULL);
             if(model->bmi.verbose > 1){
-                printf("set ET method from config file \n");
-                printf("%d\n", model->et_method);
+                printf("set PET method from config file \n");
+                printf("%d\n", model->pet_method);
             }
         }
         if (strcmp(param_key, "yes_aorc") == 0) {
-            model->et_options.yes_aorc = strtod(param_value, NULL);
+            model->pet_options.yes_aorc = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("set aorc boolean from config file \n");
-                printf("%d\n", model->et_options.yes_aorc);
+                printf("%d\n", model->pet_options.yes_aorc);
             }
             continue;
         }
@@ -583,7 +583,7 @@ int read_init_config_et(et_model* model, const char* config_file)//,
             model->forcing_file = strdup(param_value);
             if (strcmp(model->forcing_file,"BMI") == 0){
                 if(model->bmi.verbose >=2)
-                    printf("in et_setup: Getting forcing values from BMI. Not reading in forcing from file. \n");
+                    printf("in pet_setup: Getting forcing values from BMI. Not reading in forcing from file. \n");
                 model->bmi.is_forcing_from_bmi = 1;
             }
             if(model->bmi.verbose >=2){
@@ -593,50 +593,50 @@ int read_init_config_et(et_model* model, const char* config_file)//,
             continue;
         }
         if (strcmp(param_key, "wind_speed_measurement_height_m") == 0) {
-            model->et_params.wind_speed_measurement_height_m = strtod(param_value, NULL);
+            model->pet_params.wind_speed_measurement_height_m = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("set wind speed measurement height from config file \n");
-                printf("%lf\n", model->et_params.wind_speed_measurement_height_m);
+                printf("%lf\n", model->pet_params.wind_speed_measurement_height_m);
             }
             continue;
         }
         if (strcmp(param_key, "humidity_measurement_height_m") == 0) {
-            model->et_params.humidity_measurement_height_m = strtod(param_value, NULL);
+            model->pet_params.humidity_measurement_height_m = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("set humidity measurement height from config file \n");
-                printf("%lf\n", model->et_params.humidity_measurement_height_m);
+                printf("%lf\n", model->pet_params.humidity_measurement_height_m);
             }
             continue;
         }
         if (strcmp(param_key, "vegetation_height_m") == 0) {
-            model->et_params.vegetation_height_m = strtod(param_value, NULL);
+            model->pet_params.vegetation_height_m = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("vegetation height from config file \n");
-                printf("%lf\n", model->et_params.vegetation_height_m);
+                printf("%lf\n", model->pet_params.vegetation_height_m);
             }
             continue;
         }
         if (strcmp(param_key, "zero_plane_displacement_height_m") == 0) {
-            model->et_params.zero_plane_displacement_height_m = strtod(param_value, NULL);
+            model->pet_params.zero_plane_displacement_height_m = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("zero_plane_displacement height from config file \n");
-                printf("%lf\n", model->et_params.zero_plane_displacement_height_m);
+                printf("%lf\n", model->pet_params.zero_plane_displacement_height_m);
             }
             continue;
         }
         if (strcmp(param_key, "shortwave_radiation_provided") == 0) {
-            model->et_options.shortwave_radiation_provided = strtod(param_value, NULL);
+            model->pet_options.shortwave_radiation_provided = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("shortwave radiation provided boolean from config file \n");
-                printf("%d\n", model->et_options.shortwave_radiation_provided);
+                printf("%d\n", model->pet_options.shortwave_radiation_provided);
             }
             continue;
         }
         if (strcmp(param_key, "momentum_transfer_roughness_length_m") == 0) {
-            model->et_params.momentum_transfer_roughness_length_m = strtod(param_value, NULL);
+            model->pet_params.momentum_transfer_roughness_length_m = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("momentum_transfer_roughness_length_m from config file \n");
-                printf("%lf\n", model->et_params.momentum_transfer_roughness_length_m);
+                printf("%lf\n", model->pet_params.momentum_transfer_roughness_length_m);
             }
             continue;
         }
@@ -831,9 +831,9 @@ static int Get_value_ptr (Bmi *self, const char *name, void **dest)
     /***********    OUTPUT   ***********************************/
     /***********************************************************/
     if (strcmp (name, "water_potential_evaporation_flux") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et-> et_m_per_s;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet-> pet_m_per_s;
         *dest = src;
         return BMI_SUCCESS;
     }
@@ -842,58 +842,58 @@ static int Get_value_ptr (Bmi *self, const char *name, void **dest)
     /***********    INPUT    ***********************************/
     /***********************************************************/
     if (strcmp (name, "land_surface_radiation~incoming~longwave__energy_flux") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.incoming_longwave_W_per_m2;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.incoming_longwave_W_per_m2;
         *dest = src;
         return BMI_SUCCESS;
     }
     if (strcmp (name, "land_surface_radiation~incoming~shortwave__energy_flux") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.incoming_shortwave_W_per_m2;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.incoming_shortwave_W_per_m2;
         *dest = src;
         return BMI_SUCCESS;
     }
     if (strcmp (name, "land_surface_air__pressure") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.surface_pressure_Pa;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.surface_pressure_Pa;
         *dest = src;
         return BMI_SUCCESS;
     }
     if (strcmp (name, "atmosphere_air_water~vapor__relative_saturation") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.specific_humidity_2m_kg_per_kg;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.specific_humidity_2m_kg_per_kg;
         *dest = src;
         return BMI_SUCCESS;
     }
     if (strcmp (name, "atmosphere_water__liquid_equivalent_precipitation_rate") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.precip_kg_per_m2;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.precip_kg_per_m2;
         *dest = src;
         return BMI_SUCCESS;
     }
     if (strcmp (name, "land_surface_air__temperature") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.air_temperature_2m_K;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.air_temperature_2m_K;
         *dest = src;
         return BMI_SUCCESS;
     }
     if (strcmp (name, "land_surface_wind__x_component_of_velocity") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.u_wind_speed_10m_m_per_s;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.u_wind_speed_10m_m_per_s;
         *dest = src;
         return BMI_SUCCESS;
     }
     if (strcmp (name, "land_surface_wind__y_component_of_velocity") == 0) {
-        et_model *et;
-        et = (et_model *) self->data;
-        src = (void*)&et->aorc.v_wind_speed_10m_m_per_s;
+        pet_model *pet;
+        pet = (pet_model *) self->data;
+        src = (void*)&pet->aorc.v_wind_speed_10m_m_per_s;
         *dest = src;
         return BMI_SUCCESS;
     }
@@ -1071,7 +1071,7 @@ static int Get_var_nbytes (Bmi *self, const char *name, int * nbytes)
         }
     }
     if (item_count < 1)
-        item_count = ((et_model *) self->data)->bmi.num_timesteps;
+        item_count = ((pet_model *) self->data)->bmi.num_timesteps;
 
     *nbytes = item_size * item_count;
     return BMI_SUCCESS;
@@ -1206,10 +1206,10 @@ static int Get_grid_nodes_per_face(Bmi *self, int grid, int *nodes_per_face)
 
 //---------------------------------------------------------------------------------------------------------------------
 Bmi* 
-register_bmi_et(Bmi *model)
+register_bmi_pet(Bmi *model)
 {
     if (model) {
-        model->data = (void*)new_bmi_et();
+        model->data = (void*)new_bmi_pet();
         model->initialize = Initialize;
         model->update = Update;
         model->update_until = Update_until;

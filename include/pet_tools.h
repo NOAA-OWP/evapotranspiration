@@ -1,5 +1,5 @@
-#ifndef ET_TOOLS_H
-#define ET_TOOLS_H
+#ifndef PET_TOOLS_H
+#define PET_TOOLS_H
 
 #define TRUE  1
 #define FALSE 0
@@ -9,13 +9,13 @@
 #define TK  273.15     //  temperature in Kelvin at zero degree Celcius
 #define SB  5.67e-08   //  stefan_boltzmann_constant in units of W/m^2/K^4
 
-double calculate_net_radiation_W_per_sq_m(et_model *model);
+double calculate_net_radiation_W_per_sq_m(pet_model *model);
 
-double calculate_aerodynamic_resistance(et_model *model);
+double calculate_aerodynamic_resistance(pet_model *model);
 
-void calculate_solar_radiation(et_model *model);
+void calculate_solar_radiation(pet_model *model);
 
-void calculate_intermediate_variables(et_model *model);
+void calculate_intermediate_variables(pet_model *model);
 
 int is_fabs_less_than_eps(double a,double epsilon);  // returns TRUE iff fabs(a)<epsilon
 
@@ -25,7 +25,7 @@ double calc_slope_of_air_saturation_vapor_pressure_Pa_per_C(double air_temperatu
 
 double calc_liquid_water_density_kg_per_m3(double water_temperature_C);
 
-int et_method_int;
+int pet_method_int;
 
 //############################################################*
 // subroutine to calculate net radiation from all components  *
@@ -34,7 +34,7 @@ int et_method_int;
 // Hydrologic Science, Addison Wesley, 1990.                  *
 // F.L. Ogden, NOAA National Weather Service, 2020            *
 //############################################################*
-double calculate_net_radiation_W_per_sq_m(et_model *model)
+double calculate_net_radiation_W_per_sq_m(pet_model *model)
 {
   // local variables 
   double net_radiation_W_per_sq_m;
@@ -62,13 +62,13 @@ double calculate_net_radiation_W_per_sq_m(et_model *model)
     surface_longwave_albedo=0.03;   // water - actually not this simple, but close enough for now
   }
   
-  if(model->et_options.yes_aorc==0)  // we must calculate longwave incoming from the atmosphere 
+  if(model->pet_options.yes_aorc==0)  // we must calculate longwave incoming from the atmosphere 
     saturation_water_vapor_partial_pressure_Pa=calc_air_saturation_vapor_pressure_Pa(model->surf_rad_forcing.air_temperature_C); 
 
   actual_water_vapor_partial_pressure_Pa=model->surf_rad_forcing.relative_humidity_percent/100.0*
                                          saturation_water_vapor_partial_pressure_Pa;
 
-  if(model->et_options.yes_aorc==0)
+  if(model->pet_options.yes_aorc==0)
   {
     // CALCULATE DOWNWELLING LONGWAVE RADIATION FLUX FROM ATMOSPHERE, W/m2.
     if(0.90 < model->surf_rad_forcing.cloud_cover_fraction) // very nearly overcast or overcast
@@ -104,21 +104,21 @@ double calculate_net_radiation_W_per_sq_m(et_model *model)
 
 //############################################################*
 // subroutine to calculate aerodynamic resistance term needed *
-// in both the Penman-Monteith FAO reference ET procedure.    *
+// in both the Penman-Monteith FAO reference PET procedure.    *
 // and the aerodynamic, combination, and Priestley-Taylor     *
-// ET calculation methods.                                    *
+// PET calculation methods.                                    *
 // Reference: http://www.fao.org/3/X0490E/x0490e06.htm        *
 // F.L. Ogden, NOAA National Weather Service, 2020            *
 //############################################################*
-double calculate_aerodynamic_resistance(et_model *model)
+double calculate_aerodynamic_resistance(pet_model *model)
 {
   // define local variables to ease computations:
-  double wind_speed_measurement_height_m = model->et_params.wind_speed_measurement_height_m;
-  double humidity_measurement_height_m = model->et_params.humidity_measurement_height_m; // default =2.0 [m],
-  double zero_plane_displacement_height_m = model->et_params.zero_plane_displacement_height_m;// depends on surface roughness [m],
-  double momentum_transfer_roughness_length_m = model->et_params.momentum_transfer_roughness_length_m; // [m],
-  double heat_transfer_roughness_length_m = model->et_params.heat_transfer_roughness_length_m;     // [m],
-  double wind_speed_m_per_s = model->et_forcing.wind_speed_m_per_s;                    // [m s-1].
+  double wind_speed_measurement_height_m = model->pet_params.wind_speed_measurement_height_m;
+  double humidity_measurement_height_m = model->pet_params.humidity_measurement_height_m; // default =2.0 [m],
+  double zero_plane_displacement_height_m = model->pet_params.zero_plane_displacement_height_m;// depends on surface roughness [m],
+  double momentum_transfer_roughness_length_m = model->pet_params.momentum_transfer_roughness_length_m; // [m],
+  double heat_transfer_roughness_length_m = model->pet_params.heat_transfer_roughness_length_m;     // [m],
+  double wind_speed_m_per_s = model->pet_forcing.wind_speed_m_per_s;                    // [m s-1].
 
   double ra,zm,zh,d,zom,zoh,k,uz;
   double von_karman_constant_squared=KV2;  // this is dimensionless universal constant [-], K=0.41, squared.
@@ -142,7 +142,7 @@ double calculate_aerodynamic_resistance(et_model *model)
   // here log is the natural logarithm.
 
   ra=log((zm-d)/zom)*log((zh-d)/zoh)/(von_karman_constant_squared*uz);  // this is the equation for the aero. resist.
-                                                                      // from the FAO reference ET document.
+                                                                      // from the FAO reference PET document.
 
   return(ra);
 }
@@ -215,7 +215,7 @@ double calc_liquid_water_density_kg_per_m3(double water_temperature_C)
 // F.L. Ogden, 2009, NOAA National Weather Service, 2020      /
 //############################################################/
 
-void calculate_solar_radiation(et_model* model)
+void calculate_solar_radiation(pet_model* model)
 {
   double delta,r,equation_of_time_minutes,M,phi;
   double sinalpha,tau,alpha,cosalpha,azimuth;
@@ -237,15 +237,15 @@ void calculate_solar_radiation(et_model* model)
   double zulu_time_h;
   double optical_air_mass;
 
-  int et_doy = model->surf_rad_forcing.day_of_year;
-  int et_zulu_time = model->surf_rad_forcing.zulu_time;
+  int pet_doy = model->surf_rad_forcing.day_of_year;
+  int pet_zulu_time = model->surf_rad_forcing.zulu_time;
 
   solar_constant_W_per_sq_m = 1361.6;     // Dudock de Wit et al. 2017 GRL, approx. avg. value
 
-  solar_declination_angle_degrees=23.45*M_PI/180.0*cos(2.0*M_PI/365.0*(172.0-et_doy));
+  solar_declination_angle_degrees=23.45*M_PI/180.0*cos(2.0*M_PI/365.0*(172.0-pet_doy));
   solar_declination_angle_radians=solar_declination_angle_degrees*M_PI/180.0;
 
-  earth_sun_distance_ratio=1.0+0.017*cos(2.0*M_PI/365*(186.0-et_doy));
+  earth_sun_distance_ratio=1.0+0.017*cos(2.0*M_PI/365*(186.0-pet_doy));
 
   // calculate the local hour angle using a unit circle centered on the observer, with Obs. at x=1, y=0.
   //      Note: G=Greenwich, A=180E=180W==antipode, O=obs., S=sun.
@@ -274,9 +274,9 @@ void calculate_solar_radiation(et_model* model)
   //
 
   // this is the "equation of time" that accounts for the analemma effect 
-  M=2.0*M_PI*et_doy/365.242;     // mean anomaly of sun  from wikipedia, works for leap years 
+  M=2.0*M_PI*pet_doy/365.242;     // mean anomaly of sun  from wikipedia, works for leap years 
   equation_of_time_minutes=-7.655*sin(M)+9.873*sin(2.0*M+3.588);    // an approximation of the equation of time, minutes 
-  zulu_time_h=et_zulu_time - equation_of_time_minutes/1440.0; // adjust the position of the sun for analemma effect
+  zulu_time_h=pet_zulu_time - equation_of_time_minutes/1440.0; // adjust the position of the sun for analemma effect
 
   // here I use the antipode as the time origin, because that is where the sun is overhead at 00:00Z
   antipodal_hour_angle_degrees    =            zulu_time_h*15.0; // see note on above figure
@@ -369,11 +369,11 @@ void calculate_solar_radiation(et_model* model)
 }
 
 // Function to calculate hydrological variables needed for evapotranspiration calculation
-void calculate_intermediate_variables(et_model* model)
+void calculate_intermediate_variables(pet_model* model)
 {
   // local variables
   double aerodynamic_resistance_sec_per_m;         //  value [s per m], computed in: calculate_aerodynamic_resistance()
-  double instantaneous_et_rate_m_per_s;
+  double instantaneous_pet_rate_m_per_s;
   double aerodynamic_resistance_s_per_m;
   double psychrometric_constant_Pa_per_C;
   double slope_sat_vap_press_curve_Pa_s;
@@ -389,48 +389,48 @@ void calculate_intermediate_variables(et_model* model)
   double gamma;
 
   // IF SOIL WATER TEMPERATURE NOT PROVIDED, USE A SANE VALUE
-  if(100.0 > model->et_forcing.water_temperature_C) model->et_forcing.water_temperature_C=22.0; // growing season
+  if(100.0 > model->pet_forcing.water_temperature_C) model->pet_forcing.water_temperature_C=22.0; // growing season
 
   // CALCULATE VARS NEEDED FOR THE ALL METHODS:
 
-  liquid_water_density_kg_per_m3 = calc_liquid_water_density_kg_per_m3(model->et_forcing.water_temperature_C); // rho_w
+  liquid_water_density_kg_per_m3 = calc_liquid_water_density_kg_per_m3(model->pet_forcing.water_temperature_C); // rho_w
 
-  water_latent_heat_of_vaporization_J_per_kg=2.501e+06-2370.0*model->et_forcing.water_temperature_C;  // eqn 2.7.6 Chow etal.
+  water_latent_heat_of_vaporization_J_per_kg=2.501e+06-2370.0*model->pet_forcing.water_temperature_C;  // eqn 2.7.6 Chow etal.
                                                                                               // aka 'lambda'
   // all methods other than radiation balance method involve at least some of the aerodynamic method calculations
 
   // IF HEAT/MOMENTUM ROUGHNESS LENGTHS NOT GIVEN, USE DEFAULTS SO THAT THEIR RATIO IS EQUAL TO 1.
-  if((1.0e-06> model->et_params.heat_transfer_roughness_length_m) ||
-   (1.0e-06> model->et_params.momentum_transfer_roughness_length_m))   // zero should be passed down if these are unknown
+  if((1.0e-06> model->pet_params.heat_transfer_roughness_length_m) ||
+   (1.0e-06> model->pet_params.momentum_transfer_roughness_length_m))   // zero should be passed down if these are unknown
   {
-    model->et_params.heat_transfer_roughness_length_m     =1.0;     // decent default values, and the ratio of these is 1.0
-    model->et_params.momentum_transfer_roughness_length_m =1.0;
+    model->pet_params.heat_transfer_roughness_length_m     =1.0;     // decent default values, and the ratio of these is 1.0
+    model->pet_params.momentum_transfer_roughness_length_m =1.0;
   }
 
   // e_sat is needed for all aerodynamic and Penman-Monteith methods
 
-  air_saturation_vapor_pressure_Pa=calc_air_saturation_vapor_pressure_Pa(model->et_forcing.air_temperature_C);
+  air_saturation_vapor_pressure_Pa=calc_air_saturation_vapor_pressure_Pa(model->pet_forcing.air_temperature_C);
 
-  if( (0.0 < model->et_forcing.relative_humidity_percent) && (100.0 >= model->et_forcing.relative_humidity_percent))
+  if( (0.0 < model->pet_forcing.relative_humidity_percent) && (100.0 >= model->pet_forcing.relative_humidity_percent))
   {
     // meaningful relative humidity value provided
-    air_actual_vapor_pressure_Pa=model->et_forcing.relative_humidity_percent/100.0 * air_saturation_vapor_pressure_Pa;
+    air_actual_vapor_pressure_Pa=model->pet_forcing.relative_humidity_percent/100.0 * air_saturation_vapor_pressure_Pa;
   
     // calculate specific humidity, q_v
-    model->et_forcing.specific_humidity_2m_kg_per_kg=0.622*air_actual_vapor_pressure_Pa/model->et_forcing.air_pressure_Pa;
+    model->pet_forcing.specific_humidity_2m_kg_per_kg=0.622*air_actual_vapor_pressure_Pa/model->pet_forcing.air_pressure_Pa;
   }
   else
   {
     // if here, we must be using AORC forcing that provides specific humidity instead of relative humidity
-    air_actual_vapor_pressure_Pa=model->et_forcing.specific_humidity_2m_kg_per_kg*model->et_forcing.air_pressure_Pa/0.622;
+    air_actual_vapor_pressure_Pa=model->pet_forcing.specific_humidity_2m_kg_per_kg*model->pet_forcing.air_pressure_Pa/0.622;
     if(air_actual_vapor_pressure_Pa > air_saturation_vapor_pressure_Pa)
     {
       // this is bad.   Actual vapor pressure of air should not be higher than saturated value.
       // warn and reset to something meaningful
       if (model->bmi.verbose>=1){
-        fprintf(stderr,"Invalid value of specific humidity with no supplied rel. humidity in ET calc. function:\n");
-        fprintf(stderr,"Relative Humidity: %lf percent\n",model->et_forcing.relative_humidity_percent);
-        fprintf(stderr,"Specific Humidity: %lf kg/kg\n",model->et_forcing.specific_humidity_2m_kg_per_kg);
+        fprintf(stderr,"Invalid value of specific humidity with no supplied rel. humidity in PET calc. function:\n");
+        fprintf(stderr,"Relative Humidity: %lf percent\n",model->pet_forcing.relative_humidity_percent);
+        fprintf(stderr,"Specific Humidity: %lf kg/kg\n",model->pet_forcing.specific_humidity_2m_kg_per_kg);
       }
       air_actual_vapor_pressure_Pa=0.65*air_saturation_vapor_pressure_Pa;
     }
@@ -439,20 +439,20 @@ void calculate_intermediate_variables(et_model* model)
   // VPD
   vapor_pressure_deficit_Pa = air_saturation_vapor_pressure_Pa - air_actual_vapor_pressure_Pa;
 
-  moist_air_gas_constant_J_per_kg_K=287.0*(1.0+0.608*model->et_forcing.specific_humidity_2m_kg_per_kg); //R_a
+  moist_air_gas_constant_J_per_kg_K=287.0*(1.0+0.608*model->pet_forcing.specific_humidity_2m_kg_per_kg); //R_a
 
-  moist_air_density_kg_per_m3=model->et_forcing.air_pressure_Pa/(moist_air_gas_constant_J_per_kg_K*
-                              (model->et_forcing.air_temperature_C+TK)); // rho_a
+  moist_air_density_kg_per_m3=model->pet_forcing.air_pressure_Pa/(moist_air_gas_constant_J_per_kg_K*
+                              (model->pet_forcing.air_temperature_C+TK)); // rho_a
 
   // DELTA
-  slope_sat_vap_press_curve_Pa_s=calc_slope_of_air_saturation_vapor_pressure_Pa_per_C(model->et_forcing.air_temperature_C); 
+  slope_sat_vap_press_curve_Pa_s=calc_slope_of_air_saturation_vapor_pressure_Pa_per_C(model->pet_forcing.air_temperature_C); 
   delta=slope_sat_vap_press_curve_Pa_s;
 
   // gamma
-  water_latent_heat_of_vaporization_J_per_kg=2.501e+06-2370.0*model->et_forcing.water_temperature_C;  // eqn 2.7.6 Chow etal.
+  water_latent_heat_of_vaporization_J_per_kg=2.501e+06-2370.0*model->pet_forcing.water_temperature_C;  // eqn 2.7.6 Chow etal.
                                                                                               // aka 'lambda'
-  psychrometric_constant_Pa_per_C=CP*model->et_forcing.air_pressure_Pa*
-                                  model->et_params.heat_transfer_roughness_length_m/
+  psychrometric_constant_Pa_per_C=CP*model->pet_forcing.air_pressure_Pa*
+                                  model->pet_params.heat_transfer_roughness_length_m/
                                   (0.622*water_latent_heat_of_vaporization_J_per_kg);
   gamma=psychrometric_constant_Pa_per_C;
 
@@ -474,4 +474,4 @@ int is_fabs_less_than_eps(double a,double epsilon)  // returns true if fabs(a)<e
   else                return(FALSE);
 }
 
-#endif // ET_CALC_PPROPERTY_H
+#endif // PET_CALC_PPROPERTY_H

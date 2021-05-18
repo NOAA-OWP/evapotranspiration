@@ -1,5 +1,5 @@
-#ifndef ET_C
-#define ET_C
+#ifndef PET_C
+#define PET_C
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,19 +8,19 @@
 #include <time.h>
 
 //local includes
-#include "../include/et.h"
-#include "../include/et_tools.h"
-#include "../include/EtEnergyBalanceMethod.h"
-#include "../include/EtAerodynamicMethod.h"
-#include "../include/EtCombinationMethod.h"
-#include "../include/EtPriestleyTaylorMethod.h"
-#include "../include/EtPenmanMonteithMethod.h"
+#include "../include/pet.h"
+#include "../include/pet_tools.h"
+#include "../include/PEtEnergyBalanceMethod.h"
+#include "../include/PEtAerodynamicMethod.h"
+#include "../include/PEtCombinationMethod.h"
+#include "../include/PEtPriestleyTaylorMethod.h"
+#include "../include/PEtPenmanMonteithMethod.h"
 
-extern void alloc_et_model(et_model *model) {
+extern void alloc_pet_model(pet_model *model) {
     // TODO: *******************
 }
 
-extern void free_et_model(et_model *model) {
+extern void free_pet_model(pet_model *model) {
     // TODO: ******************
 }
 
@@ -28,10 +28,10 @@ extern void free_et_model(et_model *model) {
 // ######################    RUN    ########    RUN    ########    RUN    ########    RUN    #################################
 // ######################    RUN    ########    RUN    ########    RUN    ########    RUN    #################################
 // ######################    RUN    ########    RUN    ########    RUN    ########    RUN    #################################
-extern int run_et(et_model* model)
+extern int run_pet(pet_model* model)
 {
   if (model->bmi.verbose >2){
-    printf("Running the ET model \n");
+    printf("Running the PET model \n");
     printf("model->bmi.is_forcing_from_bmi %d \n", model->bmi.is_forcing_from_bmi);
   }
 
@@ -44,22 +44,22 @@ extern int run_et(et_model* model)
                And move the "else" section below the model->aorc.forcings setting block.
   */
   if (model->bmi.is_forcing_from_bmi == 0){
-    model->et_forcing.air_temperature_C = model->forcing_data_air_temperature_2m_K[model->bmi.current_step] - TK;//convert to C
-    model->et_forcing.relative_humidity_percent     = (double)-99.9; // this negative number means use specific humidity
-    model->et_forcing.specific_humidity_2m_kg_per_kg = model->forcing_data_precip_kg_per_m2[model->bmi.current_step];
-    model->et_forcing.air_pressure_Pa    = model->forcing_data_surface_pressure_Pa[model->bmi.current_step];
-    model->et_forcing.wind_speed_m_per_s = hypot(model->forcing_data_u_wind_speed_10m_m_per_s[model->bmi.current_step],
+    model->pet_forcing.air_temperature_C = model->forcing_data_air_temperature_2m_K[model->bmi.current_step] - TK;//convert to C
+    model->pet_forcing.relative_humidity_percent     = (double)-99.9; // this negative number means use specific humidity
+    model->pet_forcing.specific_humidity_2m_kg_per_kg = model->forcing_data_precip_kg_per_m2[model->bmi.current_step];
+    model->pet_forcing.air_pressure_Pa    = model->forcing_data_surface_pressure_Pa[model->bmi.current_step];
+    model->pet_forcing.wind_speed_m_per_s = hypot(model->forcing_data_u_wind_speed_10m_m_per_s[model->bmi.current_step],
                                            model->forcing_data_v_wind_speed_10m_m_per_s[model->bmi.current_step]);                 
   }
   else{
-    model->et_forcing.air_temperature_C = model->aorc.air_temperature_2m_K - TK;//convert to C
-    model->et_forcing.relative_humidity_percent     = (double)-99.9; // this negative number means use specific humidity
-    model->et_forcing.specific_humidity_2m_kg_per_kg = model->aorc.specific_humidity_2m_kg_per_kg;
-    model->et_forcing.air_pressure_Pa    = model->aorc.surface_pressure_Pa;
-    model->et_forcing.wind_speed_m_per_s = hypot(model->aorc.u_wind_speed_10m_m_per_s, model->aorc.v_wind_speed_10m_m_per_s);                 
+    model->pet_forcing.air_temperature_C = model->aorc.air_temperature_2m_K - TK;//convert to C
+    model->pet_forcing.relative_humidity_percent     = (double)-99.9; // this negative number means use specific humidity
+    model->pet_forcing.specific_humidity_2m_kg_per_kg = model->aorc.specific_humidity_2m_kg_per_kg;
+    model->pet_forcing.air_pressure_Pa    = model->aorc.surface_pressure_Pa;
+    model->pet_forcing.wind_speed_m_per_s = hypot(model->aorc.u_wind_speed_10m_m_per_s, model->aorc.v_wind_speed_10m_m_per_s);                 
   }
 
-  if(model->et_options.yes_aorc==1)
+  if(model->pet_options.yes_aorc==1)
   {
     if (model->bmi.verbose >1)
         printf("YES AORC \n");
@@ -76,16 +76,16 @@ extern int run_et(et_model* model)
     }
 
     // jframe: not sure if this belongs here or not, but it needs to happen somewhere.
-    model->et_forcing.specific_humidity_2m_kg_per_kg =  model->aorc.specific_humidity_2m_kg_per_kg;
+    model->pet_forcing.specific_humidity_2m_kg_per_kg =  model->aorc.specific_humidity_2m_kg_per_kg;
 
     model->aorc.latitude                       =  model->solar_params.latitude_degrees;
     model->aorc.longitude                      =  model->solar_params.longitude_degrees;
 
     // wind speed was measured at 10.0 m height, so we need to calculate the wind speed at 2.0m
-    double numerator=log(2.0/model->et_params.zero_plane_displacement_height_m);
-    double denominator=log(model->et_params.wind_speed_measurement_height_m/model->et_params.zero_plane_displacement_height_m);
-    model->et_forcing.wind_speed_m_per_s = model->et_forcing.wind_speed_m_per_s*numerator/denominator;  // this is the 2 m value
-    model->et_params.wind_speed_measurement_height_m=2.0;  // change because we converted from 10m to 2m height.
+    double numerator=log(2.0/model->pet_params.zero_plane_displacement_height_m);
+    double denominator=log(model->pet_params.wind_speed_measurement_height_m/model->pet_params.zero_plane_displacement_height_m);
+    model->pet_forcing.wind_speed_m_per_s = model->pet_forcing.wind_speed_m_per_s*numerator/denominator;  // this is the 2 m value
+    model->pet_params.wind_speed_measurement_height_m=2.0;  // change because we converted from 10m to 2m height.
     // transfer aorc forcing data into our data structure for surface radiation calculations
     model->surf_rad_forcing.incoming_shortwave_radiation_W_per_sq_m = (double)model->aorc.incoming_shortwave_W_per_m2;
     model->surf_rad_forcing.incoming_longwave_radiation_W_per_sq_m  = (double)model->aorc.incoming_longwave_W_per_m2; 
@@ -100,7 +100,7 @@ extern int run_et(et_model* model)
     if(100.0< model->surf_rad_forcing.relative_humidity_percent) model->surf_rad_forcing.relative_humidity_percent = 99.0;
   }
 
-  if(model->et_options.shortwave_radiation_provided==0)
+  if(model->pet_options.shortwave_radiation_provided==0)
   {
     // populate the elements of the structures needed to calculate shortwave (solar) radiation, and calculate it
     // ### OPTIONS ###
@@ -110,37 +110,37 @@ extern int run_et(et_model* model)
   }
   
   // we must calculate the net radiation before calling the ET subroutine.
-  if(model->et_options.use_aerodynamic_method==0) 
+  if(model->pet_options.use_aerodynamic_method==0) 
   {
     if (model->bmi.verbose > 1)
-      printf("calculate the net radiation before calling the ET subroutine");
+      printf("calculate the net radiation before calling the PET subroutine");
     // NOTE don't call this function use_aerodynamic_method option is TRUE
-    model->et_forcing.net_radiation_W_per_sq_m=calculate_net_radiation_W_per_sq_m(model);
+    model->pet_forcing.net_radiation_W_per_sq_m=calculate_net_radiation_W_per_sq_m(model);
   }
 
-  if(model->et_options.use_energy_balance_method ==1)
-    model->et_m_per_s=evapotranspiration_energy_balance_method(model);
-  if(model->et_options.use_aerodynamic_method ==1)
-    model->et_m_per_s=evapotranspiration_aerodynamic_method(model);
-  if(model->et_options.use_combination_method ==1)
-    model->et_m_per_s=evapotranspiration_combination_method(model);
-  if(model->et_options.use_priestley_taylor_method ==1)
-    model->et_m_per_s=evapotranspiration_priestley_taylor_method(model);
-  if(model->et_options.use_penman_monteith_method ==1)
-    model->et_m_per_s=evapotranspiration_penman_monteith_method(model);
+  if(model->pet_options.use_energy_balance_method ==1)
+    model->pet_m_per_s=pevapotranspiration_energy_balance_method(model);
+  if(model->pet_options.use_aerodynamic_method ==1)
+    model->pet_m_per_s=pevapotranspiration_aerodynamic_method(model);
+  if(model->pet_options.use_combination_method ==1)
+    model->pet_m_per_s=pevapotranspiration_combination_method(model);
+  if(model->pet_options.use_priestley_taylor_method ==1)
+    model->pet_m_per_s=pevapotranspiration_priestley_taylor_method(model);
+  if(model->pet_options.use_penman_monteith_method ==1)
+    model->pet_m_per_s=pevapotranspiration_penman_monteith_method(model);
 
   if (model->bmi.verbose >=1){
     printf("\n");
     printf("_______________________________________________________________________________\n");
-    if(model->et_options.use_energy_balance_method ==1)   printf("energy balance method:\n");
-    if(model->et_options.use_aerodynamic_method ==1)      printf("aerodynamic method:\n");
-    if(model->et_options.use_combination_method ==1)      printf("combination method:\n");
-    if(model->et_options.use_priestley_taylor_method ==1) printf("Priestley-Taylor method:\n");
-    if(model->et_options.use_penman_monteith_method ==1)  printf("Penman Monteith method:\n");
+    if(model->pet_options.use_energy_balance_method ==1)   printf("energy balance method:\n");
+    if(model->pet_options.use_aerodynamic_method ==1)      printf("aerodynamic method:\n");
+    if(model->pet_options.use_combination_method ==1)      printf("combination method:\n");
+    if(model->pet_options.use_priestley_taylor_method ==1) printf("Priestley-Taylor method:\n");
+    if(model->pet_options.use_penman_monteith_method ==1)  printf("Penman Monteith method:\n");
 
-    printf("calculated instantaneous potential evapotranspiration (PET) =%8.6e m/s\n",model->et_m_per_s);
+    printf("calculated instantaneous potential evapotranspiration (PET) =%8.6e m/s\n",model->pet_m_per_s);
     if (model->bmi.verbose > 1)
-      printf("calculated instantaneous potential evapotranspiration (PET) =%8.6lf mm/d\n",model->et_m_per_s*86400.0*1000.0);
+      printf("calculated instantaneous potential evapotranspiration (PET) =%8.6lf mm/d\n",model->pet_m_per_s*86400.0*1000.0);
   
   }
 
@@ -151,27 +151,27 @@ extern int run_et(et_model* model)
 //########################    SETUP    ########    SETUP    ########    SETUP    ########################################
 //########################    SETUP    ########    SETUP    ########    SETUP    ########################################
 //########################    SETUP    ########    SETUP    ########    SETUP    ########################################
-void et_setup(et_model* model)
+void pet_setup(pet_model* model)
 {
 
   //##########################################################
   // THE VALUE OF THESE FLAGS DETERMINE HOW THIS CODE BEHAVES.
   //##########################################################
-  model->et_options.use_energy_balance_method   = 0;
-  model->et_options.use_aerodynamic_method      = 0;
-  model->et_options.use_combination_method      = 0;
-  model->et_options.use_priestley_taylor_method = 0;
-  model->et_options.use_penman_monteith_method  = 0;
-  if (model->et_method == 1)
-    model->et_options.use_energy_balance_method   = 1;
-  if (model->et_method == 2)
-    model->et_options.use_aerodynamic_method      = 1;
-  if (model->et_method == 3)
-    model->et_options.use_combination_method      = 1;
-  if (model->et_method == 4)
-    model->et_options.use_priestley_taylor_method = 1;
-  if (model->et_method == 5)
-    model->et_options.use_penman_monteith_method  = 1;
+  model->pet_options.use_energy_balance_method   = 0;
+  model->pet_options.use_aerodynamic_method      = 0;
+  model->pet_options.use_combination_method      = 0;
+  model->pet_options.use_priestley_taylor_method = 0;
+  model->pet_options.use_penman_monteith_method  = 0;
+  if (model->pet_method == 1)
+    model->pet_options.use_energy_balance_method   = 1;
+  if (model->pet_method == 2)
+    model->pet_options.use_aerodynamic_method      = 1;
+  if (model->pet_method == 3)
+    model->pet_options.use_combination_method      = 1;
+  if (model->pet_method == 4)
+    model->pet_options.use_priestley_taylor_method = 1;
+  if (model->pet_method == 5)
+    model->pet_options.use_penman_monteith_method  = 1;
 
 
   //###################################################################################################
@@ -196,11 +196,11 @@ void et_setup(et_model* model)
 
   // ET forcing values that come from somewhere else...
   //---------------------------------------------------------------------------------------------------------------
-  model->et_forcing.canopy_resistance_sec_per_m   = 50.0; // TODO: from plant growth model
-  model->et_forcing.water_temperature_C           = 15.5; // TODO: from soil or lake thermal model
-  model->et_forcing.ground_heat_flux_W_per_sq_m=-10.0;    // TODO from soil thermal model.  Negative denotes downward.
+  model->pet_forcing.canopy_resistance_sec_per_m   = 50.0; // TODO: from plant growth model
+  model->pet_forcing.water_temperature_C           = 15.5; // TODO: from soil or lake thermal model
+  model->pet_forcing.ground_heat_flux_W_per_sq_m=-10.0;    // TODO from soil thermal model.  Negative denotes downward.
 
-  if(model->et_options.yes_aorc!=1)
+  if(model->pet_options.yes_aorc!=1)
   {
     // these values are needed if we don't have incoming longwave radiation measurements.
     model->surf_rad_forcing.incoming_shortwave_radiation_W_per_sq_m     = 440.1;     // must come from somewhere
@@ -225,7 +225,7 @@ void et_setup(et_model* model)
   //---------------------------------------------------------------------------------------------------------------
   model->surf_rad_forcing.surface_skin_temperature_C = 12.0;  // TODO from soil thermal model or vegetation model.
 
-  if(model->et_options.shortwave_radiation_provided==0)
+  if(model->pet_options.shortwave_radiation_provided==0)
   {
     // populate the elements of the structures needed to calculate shortwave (solar) radiation, and calculate it
     // ### OPTIONS ###
@@ -259,7 +259,7 @@ void et_setup(et_model* model)
 }
 
 
-void et_unit_tests(et_model* model)
+void pet_unit_tests(pet_model* model)
 {
   printf("\n #----------- BEGIN UNIT TESTS   ---------------# \n");
   
@@ -275,16 +275,16 @@ void et_unit_tests(et_model* model)
   printf("solar local hour angle is %lf degrees,\n and should be: 31.01549773 degrees \n",
       model->solar_results.solar_local_hour_angle_degrees);
   printf("\n #-----------       UNIT TEST    ---------------# \n");
-  if (model->et_options.use_energy_balance_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.594743e-08 m/s \n", model->et_m_per_s);
-  if (model->et_options.use_aerodynamic_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.977490e-08 m/s \n", model->et_m_per_s);
-  if (model->et_options.use_combination_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.694909e-08 m/s \n", model->et_m_per_s);
-  if (model->et_options.use_priestley_taylor_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.249098e-08 m/s \n", model->et_m_per_s);
-  if (model->et_options.use_penman_monteith_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 1.106268e-08 m/s \n", model->et_m_per_s);
+  if (model->pet_options.use_energy_balance_method == 1)
+      printf("potential ET is %8.6e m/s,\n and should be: 8.594743e-08 m/s \n", model->pet_m_per_s);
+  if (model->pet_options.use_aerodynamic_method == 1)
+      printf("potential ET is %8.6e m/s,\n and should be: 8.977490e-08 m/s \n", model->pet_m_per_s);
+  if (model->pet_options.use_combination_method == 1)
+      printf("potential ET is %8.6e m/s,\n and should be: 8.694909e-08 m/s \n", model->pet_m_per_s);
+  if (model->pet_options.use_priestley_taylor_method == 1)
+      printf("potential ET is %8.6e m/s,\n and should be: 8.249098e-08 m/s \n", model->pet_m_per_s);
+  if (model->pet_options.use_penman_monteith_method == 1)
+      printf("potential ET is %8.6e m/s,\n and should be: 1.106268e-08 m/s \n", model->pet_m_per_s);
 
   printf("\n #------------  END UNIT TESTS   ---------------# \n");
   printf("\n");
@@ -304,8 +304,8 @@ void et_unit_tests(et_model* model)
 /*####################################################################*/
 /*########################### PARSE LINE #############################*/
 /*####################################################################*/
-void parse_aorc_line_et(char *theString, long *year, long *month, long *day, long *hour, long *minute, double *second,
-                     struct aorc_forcing_data_et *aorc) {
+void parse_aorc_line_pet(char *theString, long *year, long *month, long *day, long *hour, long *minute, double *second,
+                     struct aorc_forcing_data_pet *aorc) {
     char str[20];
     long yr, mo, da, hr, mi;
     double mm, julian, se;
@@ -381,7 +381,7 @@ void parse_aorc_line_et(char *theString, long *year, long *month, long *day, lon
 /*####################################################################*/
 /*############################## GET WORD ############################*/
 /*####################################################################*/
-void get_word_et(char *theString, int *start, int *end, char *theWord, int *wordlen) {
+void get_word_pet(char *theString, int *start, int *end, char *theWord, int *wordlen) {
     int i, lenny, j;
     lenny = strlen(theString);
 
@@ -419,7 +419,7 @@ void get_word_et(char *theString, int *start, int *end, char *theWord, int *word
 }
 
 /****************************************/
-void itwo_alloc_et(int ***array, int rows, int cols) {
+void itwo_alloc_pet(int ***array, int rows, int cols) {
     int i, frows, fcols, numgood = 0;
     int error = 0;
 
@@ -448,7 +448,7 @@ void itwo_alloc_et(int ***array, int rows, int cols) {
 }
 
 
-void dtwo_alloc_et(double ***array, int rows, int cols) {
+void dtwo_alloc_pet(double ***array, int rows, int cols) {
     int i, frows, fcols, numgood = 0;
     int error = 0;
 
@@ -477,7 +477,7 @@ void dtwo_alloc_et(double ***array, int rows, int cols) {
 }
 
 
-void d_alloc_et(double **var, int size) {
+void d_alloc_pet(double **var, int size) {
     size++;  /* just for safety */
 
     *var = (double *) malloc(size * sizeof(double));
@@ -489,7 +489,7 @@ void d_alloc_et(double **var, int size) {
     return;
 }
 
-void i_alloc_et(int **var, int size) {
+void i_alloc_pet(int **var, int size) {
     size++;  /* just for safety */
 
     *var = (int *) malloc(size * sizeof(int));
@@ -521,7 +521,7 @@ void i_alloc_et(int **var, int size) {
 */
 
 
-double greg_2_jul_et(
+double greg_2_jul_pet(
         long year,
         long mon,
         long day,
@@ -563,7 +563,7 @@ double greg_2_jul_et(
 ** Modified by FLO 4/99 to account for nagging round off error 
 **
 */
-void calc_date_et(double jd, long *y, long *m, long *d, long *h, long *mi,
+void calc_date_pet(double jd, long *y, long *m, long *d, long *h, long *mi,
                double *sec) {
     static int ret[4];
 
@@ -614,4 +614,4 @@ void calc_date_et(double jd, long *y, long *m, long *d, long *h, long *mi,
 
 
 
-#endif  // ET_C
+#endif  // PET_C

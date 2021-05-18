@@ -1,6 +1,6 @@
 verbose=0
-et_method=5
-forcing_file=./forcing/cat-67_2015.csv
+pet_method=5
+forcing_file=BMI
 run_unit_tests=0
 yes_aorc=1
 yes_wrf=0

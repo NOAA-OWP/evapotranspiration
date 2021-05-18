@@ -1,5 +1,5 @@
-#ifndef ET_H
-#define ET_H
+#ifndef PET_H
+#define PET_H
 
 #include <stdio.h>
 #include <math.h>
@@ -78,7 +78,7 @@
 //-----------------------------------------------------------------------------------------------------------------
 
 //DATA STRUCTURE TO HOLD AORC FORCING DATA
-struct aorc_forcing_data_et
+struct aorc_forcing_data_pet
 {
   // struct NAME                          DESCRIPTION                                            ORIGINAL AORC NAME     
   //____________________________________________________________________________________________________________________
@@ -94,9 +94,9 @@ struct aorc_forcing_data_et
   float longitude;                       // degrees east of prime meridian. Negative west          | longitude
   double time; //TODO: type?           // seconds since 1970-01-01 00:00:00.0 0:00               | time
 };
-typedef struct aorc_forcing_data_et aorc_forcing_data_et;
+typedef struct aorc_forcing_data_pet aorc_forcing_data_pet;
 
-struct evapotranspiration_options  // these determine which method is applied to calculate ET.
+struct pevapotranspiration_options  // these determine which method is applied to calculate ET.
 {
   // element NAME                       DESCRIPTION
   //____________________________________________________________________________________________________________________
@@ -111,7 +111,7 @@ struct evapotranspiration_options  // these determine which method is applied to
   int use_penman_monteith_method;   // set to TRUE if using just the Penman Monteith method for calculating PET
 };
 
-struct evapotranspiration_params
+struct pevapotranspiration_params
 {
   // element NAME                                    DESCRIPTION                                                
   //____________________________________________________________________________________________________________________
@@ -126,7 +126,7 @@ struct evapotranspiration_params
   int    day_of_year;                              // could be used to adjust canopy resistance for seasonality
 };
 
-struct evapotranspiration_forcing
+struct pevapotranspiration_forcing
 {
   // element NAME                          DESCRIPTION                                                                  
   //___________________________________________________________________________________________________________________
@@ -161,7 +161,7 @@ struct surface_radiation_forcing
   double ambient_temperature_lapse_rate_deg_C_per_km;  // This is a standard WRF output.  Typ. 6.49 K/km ICAO std. atm.
   double cloud_cover_fraction;         // dimensionless (0-1).  This should be a WRF output.
   double cloud_base_height_m;          // the height from ground to bottom of clouds in m.  From WRF output
-  double atmospheric_turbidity_factor; // Linke turbidity factor needed iff et_options.shortwave_radiation_provided=FALSE
+  double atmospheric_turbidity_factor; // Linke turbidity factor needed iff pet_options.shortwave_radiation_provided=FALSE
   int    day_of_year;
   double zulu_time;                    // (0.0-23.999999) hours
 };
@@ -228,13 +228,13 @@ struct bmi
   int is_forcing_from_bmi;
 };
 
-struct et_model{
+struct pet_model{
   
   // FLAGS
   int yes_aorc; // if TRUE then using AORC forcing data- if FALSE then we must calculate incoming short/longwave rad.
   int yes_wrf;  // if TRUE then we get radiation winds etc. from WRF output.  TODO not implemented.
-  int et_method;
-  double et_m_per_s;
+  int pet_method;
+  double pet_m_per_s;
   char* forcing_file;
   // ***********************************************************
   // ******************* Dynamic allocations *******************
@@ -250,11 +250,11 @@ struct et_model{
   double* forcing_data_u_wind_speed_10m_m_per_s;        // U-component of Wind at 10m height, m/s                 | UGRD_10maboveground
   double* forcing_data_v_wind_speed_10m_m_per_s;        // V-component of Wind at 10m height, m/s                 | VGRD_10maboveground
 
-  struct aorc_forcing_data_et aorc;
+  struct aorc_forcing_data_pet aorc;
 
-  struct evapotranspiration_options et_options;
-  struct evapotranspiration_params  et_params;
-  struct evapotranspiration_forcing et_forcing;
+  struct pevapotranspiration_options pet_options;
+  struct pevapotranspiration_params  pet_params;
+  struct pevapotranspiration_forcing pet_forcing;
   struct intermediate_vars inter_vars;
 
   struct surface_radiation_params   surf_rad_params;
@@ -267,30 +267,30 @@ struct et_model{
   struct bmi bmi;
 
 };
-typedef struct et_model et_model;
+typedef struct pet_model pet_model;
 
-extern void alloc_et_model(et_model *model);
+extern void alloc_pet_model(pet_model *model);
 
-extern void free_et_model(et_model *model);
+extern void free_pet_model(pet_model *model);
 
-extern int run_et(et_model* model);
+extern int run_pet(pet_model* model);
 
-void et_setup(et_model* model);
-void et_unit_tests(et_model* model);
+void pet_setup(pet_model* model);
+void pet_unit_tests(pet_model* model);
 
 /**************************************************************************/
 /* ALL THE STUFF BELOW HERE IS JUST UTILITY MEMORY AND TIME FUNCTION CODE */
 /**************************************************************************/
-extern void parse_aorc_line_et(char *theString,long *year,long *month, long *day,long *hour,
-                            long *minute, double *dsec, struct aorc_forcing_data_et *aorc);
+extern void parse_aorc_line_pet(char *theString,long *year,long *month, long *day,long *hour,
+                            long *minute, double *dsec, struct aorc_forcing_data_pet *aorc);
 
-extern void get_word_et(char *theString,int *start,int *end,char *theWord,int *wordlen);
-extern void itwo_alloc_et( int ***ptr, int x, int y);
-extern void dtwo_alloc_et( double ***ptr, int x, int y);
-extern void d_alloc_et(double **var,int size);
+extern void get_word_pet(char *theString,int *start,int *end,char *theWord,int *wordlen);
+extern void itwo_alloc_pet( int ***ptr, int x, int y);
+extern void dtwo_alloc_pet( double ***ptr, int x, int y);
+extern void d_alloc_pet(double **var,int size);
 extern void i_alloc(int **var,int size);
-extern double greg_2_jul_et(long year, long mon, long day, long h, long mi,
+extern double greg_2_jul_pet(long year, long mon, long day, long h, long mi,
                          double se);
-extern void calc_date_et(double jd, long *y, long *m, long *d, long *h, long *mi,
+extern void calc_date_pet(double jd, long *y, long *m, long *d, long *h, long *mi,
                       double *sec);
 #endif

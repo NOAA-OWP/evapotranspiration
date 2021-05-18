@@ -1,5 +1,5 @@
 verbose=1
-et_method=4
+pet_method=1
 forcing_file=./forcing/unit_test_forcing.csv
 run_unit_tests=1
 yes_aorc=1
