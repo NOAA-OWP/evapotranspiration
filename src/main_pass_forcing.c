@@ -5,8 +5,8 @@
 #include "../include/pet.h"
 #include "../include/bmi_pet.h"
 
-#include "../../AORC/include/aorc.h"
-#include "../../AORC/include/bmi_aorc.h"
+#include "../forcing_code/include/aorc.h"
+#include "../forcing_code/include/bmi_aorc.h"
 
 /***************************************************************
     Function to pass the forcing data from AORC to PET using BMI.
