@@ -17,10 +17,11 @@ This should generate an executable called **run_bmi**. To run this executable yo
 2. Aerodynamic method: `./run_bmi pet_config_unit_test2.txt`
 3. Combination method: `./run_bmi pet_config_unit_test3.txt`
 4. Priestley Taylor method: `./run_bmi pet_config_unit_test4.txt`
-5. Penman Monteith method: `./run_bmi pet_config_unit_test5.txt`
-Included in this repository is an environment file (env_cheyenne.sh), and a "make and run" file (make_and_run.sh), which will compile the code and run the five PET methods. If you are on the Cheyenne computer, or if you can modify these files to your machine, you can simply follow these two steps to run this code:
-1. `source env_cheyenne.sh`
-2. `./make_and_run_read_forcings.sh`
+5. Penman Monteith method: `./run_bmi pet_config_unit_test5.txt`  
+Included in this repository is an environment file (env_cheyenne.sh), and two "make and run" files. `make_and_run_read_forcings.sh` will compile the code and run the five PET methods. 
+The other is `make_and_run_pass_forcings.sh`, which is an example of how the PET model will be run in a framework, where the forcing values are passed in through BMI functions (e.g., set_value()). An environment file exists, which should allow you to run compile and run the potential evaporation routines: `source env_cheyenne.sh`. Then all you need to do is run one or both of the two scrips:
+1. `./make_and_run_read_forcings.sh`  
+2. `./make_and_run_pass_forcings.sh`  
 
 # This rough code outline shows a basic outline of workflow. 
 The `pet_bmi.c` file runs BMI functions that initialize, update and finalize an instance of a PET model. It also includes descriptive functions to interpret specifics of the model, such as variable names, units, time/timestep, etc. And it also allows a user (or framework) to get and set values in this model. The `bmi_pet.c` code interacts with the `pet.c` code, which sets up the model based on the PET method chosen. For instance, the aerodynamic method does not calculate the net radiation before calling the PET subroutine, but the other PET methods do. This pet.c file then calls one of the five PET methods available at this time. When a method is called it returns a value for PET in m/s, and that is set directly to the BMI model structure.
