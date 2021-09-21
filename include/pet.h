@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <float.h>  // JG EDIT
 
 #define TRUE  1
 #define FALSE 0

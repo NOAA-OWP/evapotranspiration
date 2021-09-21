@@ -428,13 +428,32 @@ static const char *input_var_units[INPUT_VAR_NAME_COUNT] = {
 
 static int Get_end_time (Bmi *self, double * time)
 {
-  
+/*  
   Get_start_time(self, time);
 
   *time += (((pet_model *) self->data)->bmi.num_timesteps * 
             ((pet_model *) self->data)->bmi.time_step_size_s);
 
-  return BMI_SUCCESS;
+  return BMI_SUCCESS;*/
+
+    // JG EDIT
+    pet_model *pet;
+    pet = (pet_model *) self->data;
+    Get_start_time(self, time);
+    
+    // see if numsteps is set via config
+    if (pet->bmi.num_timesteps == 1){
+        // if ==1 (not really defined) set to FLT_MAX macro via float.h
+        // See https://bmi.readthedocs.io/en/latest/#get-end-time
+        *time += FLT_MAX;
+        return BMI_SUCCESS;
+    }
+    else {
+        // otherwise, set via numsteps
+        *time += pet->bmi.num_timesteps * pet->bmi.time_step_size_s;
+        return BMI_SUCCESS;
+    }
+    
 }
 
 
