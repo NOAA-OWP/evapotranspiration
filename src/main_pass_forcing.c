@@ -125,7 +125,7 @@ int
 
 //  printf("looping through and calling update\n");
   int i=0;
-  for (i = 0; i < 1; i++){
+  for (i = 0; i < 100; i++){
     // The unit test only runs one time step.
     aorc_bmi_model->update(aorc_bmi_model);
     pass_forcing_from_aorc_to_pet(pet_bmi_model, aorc_bmi_model);
