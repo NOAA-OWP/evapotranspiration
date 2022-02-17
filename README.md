@@ -23,6 +23,8 @@ The other is `make_and_run_pass_forcings.sh`, which is an example of how the PET
 1. `./make_and_run_read_forcings.sh`  
 2. `./make_and_run_pass_forcings.sh`  
 
+To build this code for use in the [Next Generation Water Resources Modeling Framework](https://github.com/NOAA-OWP/ngen), please follow the build instructions in [INSTALL.md](INSTALL.md).
+
 # This rough code outline shows a basic outline of workflow. 
 The `pet_bmi.c` file runs BMI functions that initialize, update and finalize an instance of a PET model. It also includes descriptive functions to interpret specifics of the model, such as variable names, units, time/timestep, etc. And it also allows a user (or framework) to get and set values in this model. The `bmi_pet.c` code interacts with the `pet.c` code, which sets up the model based on the PET method chosen. For instance, the aerodynamic method does not calculate the net radiation before calling the PET subroutine, but the other PET methods do. This pet.c file then calls one of the five PET methods available at this time. When a method is called it returns a value for PET in m/s, and that is set directly to the BMI model structure.
 ![code_flow](./figs/bmi_pet.png)

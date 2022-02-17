@@ -1,4 +1,6 @@
-# PET Submodule Library Build Instructions
+# PET Submodule Library Build Instructions for use in the Next Generation Water Resources Modeling Framework
+
+**These build instructions are specific to running evapotranspiration in the [Next Generation Water Resources Modeling Framework](https://github.com/NOAA-OWP/ngen)**
 
 First, cd into the outer directory containing the submodule:
 
