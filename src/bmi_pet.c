@@ -5,7 +5,7 @@
 #include "../include/bmi.h"
 #include "../include/bmi_pet.h"
 
-#define INPUT_VAR_NAME_COUNT 8 // All the forcings? 
+#define INPUT_VAR_NAME_COUNT 7 //
 #define OUTPUT_VAR_NAME_COUNT 1 // water_potential_evaporation_flux; 
 
 static int 
@@ -355,7 +355,6 @@ static const int input_var_item_count[INPUT_VAR_NAME_COUNT] = {
   1,
   1,
   1,
-  1,
   1
 };
 
@@ -367,13 +366,11 @@ static const char input_var_grids[INPUT_VAR_NAME_COUNT] = {
         0,
         0,
         0,
-        0,
         0
 };
 
 //---------------------------------------------------------------------------------------------------------------------
 static const char *input_var_locations[INPUT_VAR_NAME_COUNT] = {
-        "node",
         "node",
         "node",
         "node",
@@ -393,7 +390,6 @@ static const char *input_var_names[INPUT_VAR_NAME_COUNT] = {
     "land_surface_radiation~incoming~longwave__energy_flux",
     "land_surface_air__pressure",
     "atmosphere_air_water~vapor__relative_saturation",
-    "atmosphere_water__liquid_equivalent_precipitation_rate",
     "land_surface_radiation~incoming~shortwave__energy_flux",
     "land_surface_air__temperature",
     "land_surface_wind__x_component_of_velocity",
@@ -408,7 +404,6 @@ static const char *input_var_types[INPUT_VAR_NAME_COUNT] = {
   "double",
   "double",
   "double",
-  "double",
   "double"
 };
 
@@ -417,7 +412,6 @@ static const char *input_var_units[INPUT_VAR_NAME_COUNT] = {
   "W m-2",
   "Pa",
   "kg kg-1",
-  "kg m-2",
   "W m-2",
   "K",
   "m s-1",
@@ -885,13 +879,6 @@ static int Get_value_ptr (Bmi *self, const char *name, void **dest)
         pet_model *pet;
         pet = (pet_model *) self->data;
         src = (void*)&pet->aorc.specific_humidity_2m_kg_per_kg;
-        *dest = src;
-        return BMI_SUCCESS;
-    }
-    if (strcmp (name, "atmosphere_water__liquid_equivalent_precipitation_rate") == 0) {
-        pet_model *pet;
-        pet = (pet_model *) self->data;
-        src = (void*)&pet->aorc.precip_kg_per_m2;
         *dest = src;
         return BMI_SUCCESS;
     }
