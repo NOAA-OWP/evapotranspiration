@@ -36,10 +36,6 @@ void pass_forcing_from_aorc_to_pet(Bmi *pet_bmi_model, Bmi *aorc_bmi_model){
     aorc_bmi_model->get_value(aorc_bmi_model, var_name3, &(var[0]));
     pet_bmi_model->set_value(pet_bmi_model, var_name3, &(var[0]));
 
-    const char* var_name4 = "atmosphere_water__liquid_equivalent_precipitation_rate";
-    aorc_bmi_model->get_value(aorc_bmi_model, var_name4, &(var[0]));
-    pet_bmi_model->set_value(pet_bmi_model, var_name4, &(var[0]));
-
     const char* var_name5 = "land_surface_radiation~incoming~shortwave__energy_flux";
     aorc_bmi_model->get_value(aorc_bmi_model, var_name5, &(var[0]));
     pet_bmi_model->set_value(pet_bmi_model, var_name5, &(var[0]));
@@ -132,7 +128,6 @@ int
     pet_bmi_model->update(pet_bmi_model);
     printf("LWDOWN after set value %lf\n", pet->aorc.incoming_longwave_W_per_m2);
     printf("SWDOWN before set value %lf\n", pet->aorc.incoming_shortwave_W_per_m2);
-    printf("precip_kg_per_m2 %lf \n", pet->aorc.precip_kg_per_m2);
     printf("surface_pressure_Pa %lf \n", pet->aorc.surface_pressure_Pa);
     printf("specific_humidity_2m_kg_per_kg %lf \n", pet->aorc.specific_humidity_2m_kg_per_kg);
     printf("air_temperature_2m_K %lf \n", pet->aorc.air_temperature_2m_K);

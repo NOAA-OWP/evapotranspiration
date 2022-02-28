@@ -1,4 +1,4 @@
-#include <stdio.h>
+ #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include "../include/bmi.h"
@@ -61,7 +61,6 @@ int
       pet_bmi_model->update(pet_bmi_model);
       printf("LWDOWN after set value %lf\n", pet->aorc.incoming_longwave_W_per_m2);
       printf("SWDOWN before set value %lf\n", pet->aorc.incoming_shortwave_W_per_m2);
-      printf("precip_kg_per_m2 %lf \n", pet->aorc.precip_kg_per_m2);
       printf("surface_pressure_Pa %lf \n", pet->aorc.surface_pressure_Pa);
       printf("specific_humidity_2m_kg_per_kg %lf \n", pet->aorc.specific_humidity_2m_kg_per_kg);
       printf("air_temperature_2m_K %lf \n", pet->aorc.air_temperature_2m_K);
