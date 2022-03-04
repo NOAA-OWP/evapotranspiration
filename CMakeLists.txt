@@ -24,6 +24,9 @@ set_target_properties(petbmi PROPERTIES VERSION ${PROJECT_VERSION})
 
 set_target_properties(petbmi PROPERTIES PUBLIC_HEADER bmi_pet.h)
 
+# Code requires minimum of C99 standard to compile
+set_target_properties(petbmi PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED ON)
+
 include(GNUInstallDirs)
 
 install(TARGETS petbmi
