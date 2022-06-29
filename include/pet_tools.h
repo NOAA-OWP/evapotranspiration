@@ -140,7 +140,12 @@ double calculate_aerodynamic_resistance(pet_model *model)
   uz=wind_speed_m_per_s;
 
   // here log is the natural logarithm.
-
+  // add a necessary condition for ra calculation 
+  // TODO: check zero displacement height (parsing from config_file?)
+  if (d >= zh) {
+    d = 2.0/3.0 * zh;
+  }
+  
   ra=log((zm-d)/zom)*log((zh-d)/zoh)/(von_karman_constant_squared*uz);  // this is the equation for the aero. resist.
                                                                       // from the FAO reference PET document.
 
