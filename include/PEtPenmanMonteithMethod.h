@@ -92,8 +92,9 @@ double penman_monteith_pet_calculation
   }
   
   // use approximations from UN FAO: http://www.fao.org/3/X0490E/x0490e06.htm#aerodynamic%20resistance%20(ra)
-  model->pet_params.zero_plane_displacement_height_m=2.0/3.0*model->pet_params.vegetation_height_m;
-  model->pet_params.momentum_transfer_roughness_length_m=0.123*model->pet_params.vegetation_height_m;
+  //model->pet_params.zero_plane_displacement_height_m=2.0/3.0*model->pet_params.vegetation_height_m; //wwu
+  //model->pet_params.momentum_transfer_roughness_length_m=0.123*model->pet_params.vegetation_height_m; //wwu
+  model->pet_params.momentum_transfer_roughness_length_m=0.1845*model->pet_params.zero_plane_displacement_height_m; //wwu 
   model->pet_params.heat_transfer_roughness_length_m=0.1*model->pet_params.momentum_transfer_roughness_length_m;
 
   aerodynamic_resistance_s_per_m = calculate_aerodynamic_resistance(model);
