@@ -67,9 +67,9 @@ This subroutine requires a considerable amount of meteorological data as input.
 
 Roughness definitions according to the European Wind Atlas.  
 According to the UN FAO Penman-Monteith example [here](http://www.fao.org/3/X0490E/x0490e06.htm#aerodynamic%20resistance%20)  
-The zero plane roughness length,"d" can be approximated as 2/3 of the vegetation height (H): d=2/3*H.  
-The momentum roughness height "zom" can be estimated as 0.123*H.  
-The heat transfer roughness height "zoh" can be approximated as 0.1 * zom.  
+The zero plane roughness length,"d" can be approximated as 2/3 of the vegetation height (H): d=2/3*H for grassland/cropland or select from above table based on comprehensive land cover categories.
+The momentum roughness height "zom" can be estimated as 0.123*H (or 0.1845*d when d is selected from above table).  
+The heat transfer roughness height "zoh" can be approximated as 0.1*zom.  
 
 # A note on code adaptation for BMI
 This code was minimally changed from the author's original version. These minor changes were made by Nextgen NWM formulation team:
