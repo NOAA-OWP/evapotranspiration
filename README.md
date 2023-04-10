@@ -30,9 +30,7 @@ The `pet_bmi.c` file runs BMI functions that initialize, update and finalize an 
 ![code_flow](./figs/bmi_pet.png)
 
 # Notes from author of the PET functions
-evapotranspiration (ET) module,  
-Version 1.0 by Fred L. Ogden, NOAA-NWS-OWP, May, 2020.  
-includes five different methods to calculate ET, from Chow, Maidment & Mays Textbook, and UNFAO Penman-Monteith:  
+Version 1.0 by Fred L. Ogden, NOAA-NWS-OWP, May, 2020 includes five different methods to calculate ET, from Chow, Maidment & Mays Textbook, and UNFAO Penman-Monteith:  
 1. energy balance method
 2. aerodynamic method
 3. combination method, which combines 1 & 2.
@@ -49,10 +47,11 @@ This subroutine requires a considerable amount of meteorological data as input.
    * h) the zero-plane roughness height of the atmospheric boundary layer assuming log-law behavior (from land cover)
    * i) the average root zone soil temperature, or near-surface water temperature in the case of lake evaporation.
    * j) the incoming solar (shortwave) radiation.  If not provided it is computed from d,e,f, using an updated method similar to the one presented in Bras, R.L. Hydrology.  Requires value of the Linke atmospheric turbidity factor, which varies from 2 for clear mountain air to 5 for smoggy air.  According to Hove & Manyumbu 2012, who calculated values over Zimbabwe that varied from 2.14 to 3.71.  Other values exist in the literature.  
-**NOTE THE VALUE OF** evapotranspiration_params.zero_plane_displacement_height COMES FROM LAND COVER DATA.  
- Taken from:    https://websites.pmc.ucsc.edu/~jnoble/wind/extrap/  
 
-| Roughness class  | Roughness length(m)  | Landscape Type                                                                             |  
+# Parameter estimation
+Values for roughness length and zero plane displacement height can be estimated from land cover data. For example, the momentum roughness length table below was taken from an [archived website](https://web.archive.org/web/20200103171837/https://websites.pmc.ucsc.edu/~jnoble/wind/extrap/) based on the original European Wind Atlas. Users may access other empirical tables via an updated [European Wind Atlas](https://gmd.copernicus.org/articles/13/5053/2020/) or [other sources](https://collaboration.cmc.ec.gc.ca/science/rpn/gem/gem-climate/Version_3.3.0/dictionary_geophys.pdf). 
+
+| Roughness class  | Momentum Roughness length (m)  | Landscape Type                                                                             |  
 | ---------- | ----------- | ------------------------------------------------------------------------------------------- |  
 | 0         | 0.0002     | Smooth water surface                                                                       |  
 | 0.2       | 0.0005     | Inlet water                                                                                |  
@@ -65,11 +64,12 @@ This subroutine requires a considerable amount of meteorological data as input.
 | 3.5       | 0.8        | Larger cities with tall buildings|  
 | 4         | 1.6        | Very large cities with tall buildings and skyscrapers|  
 
-Roughness definitions according to the European Wind Atlas.  
-According to the UN FAO Penman-Monteith example [here](http://www.fao.org/3/X0490E/x0490e06.htm#aerodynamic%20resistance%20)  
-The zero plane roughness length,"d" can be approximated as 2/3 of the vegetation height (H): d=2/3*H for grassland/cropland or selected from above table based on comprehensive land cover categories.  
-The momentum roughness height "zom" can be estimated as 0.123*H (or 0.1845*d when d is selected from above table).  
-The heat transfer roughness height "zoh" can be approximated as 0.1*zom.  
+
+You may also estimate various parameters using the UN FAO Penman-Monteith example [here](http://www.fao.org/3/X0490E/x0490e06.htm#aerodynamic%20resistance%20). 
+
+The above source indcates the zero plane roughness length, `d` can be approximated as 2/3 of the vegetation height (`H`): `d=2/3*H` for grassland/cropland. For taller vegetation (e.g., coniferous forests), a `2/3*H` estimate may produce a `d` that is greater than the wind speed measurement height, which will cause the PET calculations to fail (you cannot take the logarithm of a negative number). In this case, the model automatically limits `d` to be 2/3 of the wind speed measurement height if it detects that the land-cover-based estimate of the former is greater than the latter.  
+The momentum roughness length `zom` can be estimated as `0.123*H` or `0.1845*d` if not taken from the above table or similar empirical sources.  
+The heat transfer roughness length `zoh` can be approximated as `0.1*zom`.  
 
 # A note on code adaptation for BMI
 This code was minimally changed from the author's original version. These minor changes were made by Nextgen NWM formulation team:
