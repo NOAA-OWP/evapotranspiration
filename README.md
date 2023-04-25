@@ -21,7 +21,7 @@ This should generate an executable called **run_bmi**. To run this executable yo
 Included in this repository is an environment file (env_cheyenne.sh), and two "make and run" files. `make_and_run_read_forcings.sh` will compile the code and run the five PET methods. 
 The other is `make_and_run_pass_forcings.sh`, which is an example of how the PET model will be run in a framework, where the forcing values are passed in through BMI functions (e.g., set_value()). An environment file exists, which should allow you to run compile and run the potential evaporation routines: `source env_cheyenne.sh`. Then all you need to do is run one or both of the two scrips:
 1. `./make_and_run_read_forcings.sh`  
-2. `./make_and_run_pass_forcings.sh`  
+2. `./make_and_run_pass_forcings.sh`  (**note:** if running with this script, you need to first get the forcing code from its repo by running `git submodule update --init` from the main level of the `evapotranspiration` directory.
 
 To build this code for use in the [Next Generation Water Resources Modeling Framework](https://github.com/NOAA-OWP/ngen), please follow the build instructions in [INSTALL.md](INSTALL.md).
 
@@ -67,7 +67,7 @@ Values for roughness length and zero plane displacement height can be estimated 
 
 You may also estimate various parameters using the UN FAO Penman-Monteith example [here](http://www.fao.org/3/X0490E/x0490e06.htm#aerodynamic%20resistance%20). 
 
-The above source indcates the zero plane roughness length, `d` can be approximated as 2/3 of the vegetation height (`H`): `d=2/3*H` for grassland/cropland. For taller vegetation (e.g., coniferous forests), a `2/3*H` estimate may produce a `d` that is greater than the wind speed measurement height, which will cause the PET calculations to fail (you cannot take the logarithm of a negative number). In this case, the model automatically limits `d` to be 2/3 of the wind speed measurement height if it detects that the land-cover-based estimate of the former is greater than the latter.  
+The above source indicates the zero plane roughness length, `d` can be approximated as 2/3 of the vegetation height (`H`): `d=2/3*H` for grassland/cropland. For taller vegetation (e.g., coniferous forests), a `2/3*H` estimate may produce a `d` that is greater than the wind speed measurement height, which will cause the PET calculations to fail (you cannot take the logarithm of a negative number). In this case, the model automatically limits `d` to be 2/3 of the wind speed measurement height if it detects that the land-cover-based estimate of the former is greater than the latter.  
 The momentum roughness length `zom` can be estimated as `0.123*H` or `0.1845*d` if not taken from the above table or similar empirical sources.  
 The heat transfer roughness length `zoh` can be approximated as `0.1*zom`.  
 
