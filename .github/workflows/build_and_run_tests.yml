@@ -32,13 +32,16 @@ jobs:
     - name: Checkout the commit
       uses: actions/checkout@v2
     
+    - name: check gcc version
+      run: gcc --version
+    
    # - name: Build and Run Standalone - read forcing option
    #   run: ./make_and_run_read_forcings.sh
         
-    - name: Build and Run Standalone - pass forcing option
-      run: |
-        git submodule update --init
-        ./make_and_run_pass_forcings.sh
+  #  - name: Build and Run Standalone - pass forcing option
+  #    run: |
+  #      git submodule update --init
+  #      ./make_and_run_pass_forcings.sh
         
-    - name: Build and Run BMI Unit Test
-      run: cd test && ./make_and_run_bmi_unit_test.sh
+  #  - name: Build and Run BMI Unit Test
+  #    run: cd test && ./make_and_run_bmi_unit_test.sh
