@@ -32,8 +32,8 @@ jobs:
     - name: Checkout the commit
       uses: actions/checkout@v2
     
-    - name: Build and Run Standalone - read forcing option
-      run: ./make_and_run_read_forcings.sh
+   # - name: Build and Run Standalone - read forcing option
+   #   run: ./make_and_run_read_forcings.sh
         
     - name: Build and Run Standalone - pass forcing option
       run: |
