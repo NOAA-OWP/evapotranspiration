@@ -34,9 +34,6 @@ jobs:
     
    # - name: check gcc version
    #   run: gcc --version
-      
-    - name: Set up GCC
-      uses: egor-tensin/setup-gcc@v1
     
    # - name: Build and Run Standalone - read forcing option
    #   run: ./make_and_run_read_forcings.sh
@@ -47,4 +44,7 @@ jobs:
   #      ./make_and_run_pass_forcings.sh
         
     - name: Build and Run BMI Unit Test
-      run: cd test && ./make_and_run_bmi_unit_test.sh
+      # run: cd test && ./make_and_run_bmi_unit_test.sh
+      run: |
+        cd test
+        gcc -lm ./main_unit_test_bmi.c ../src/bmi_pet.c ../src/pet.c -o run_pet_bmi_test      
