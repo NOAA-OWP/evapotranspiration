@@ -47,4 +47,4 @@ jobs:
       # run: cd test && ./make_and_run_bmi_unit_test.sh
       run: |
         cd test
-        gcc -lm ./main_unit_test_bmi.c ../src/bmi_pet.c ../src/pet.c -o run_pet_bmi_test      
+        gcc -o run_pet_bmi_test ./main_unit_test_bmi.c ../src/bmi_pet.c ../src/pet.c -lm      
