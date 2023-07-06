@@ -44,7 +44,8 @@ jobs:
   #      ./make_and_run_pass_forcings.sh
         
     - name: Build and Run BMI Unit Test
-      run: cd test && ./make_and_run_bmi_unit_test.sh
-      #run: |
-      #  cd test
-      #  gcc ./main_unit_test_bmi.c ../src/bmi_pet.c ../src/pet.c -lm -o run_pet_bmi_test    
+      #run: cd test && ./make_and_run_bmi_unit_test.sh
+      run: |
+        cd test
+        gcc ./main_unit_test_bmi.c ../src/bmi_pet.c ../src/pet.c -lm -o run_pet_bmi_test
+        ./run_pet_bmi_test ../configs/pet_config_bmi_unit_test.txt
