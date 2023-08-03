@@ -140,7 +140,48 @@ Update (Bmi *self)
     return BMI_SUCCESS;
 }
 
-static int
+// Implimenting a more standard version of update_until here...
+
+static int 
+Update_until (Bmi *self, double t)
+{
+    // https://bmi.readthedocs.io/en/latest/#update-until
+    // "the time argument can be a non-integral multiple of time steps"
+
+    pet_model* pet = (pet_model *) self->data;
+    
+    double dt;
+    double now;
+
+    if(self->get_time_step (self, &dt) == BMI_FAILURE)
+        return BMI_FAILURE;
+
+    if(self->get_current_time(self, &now) == BMI_FAILURE)
+        return BMI_FAILURE;    
+
+    {
+    
+    int n;
+    double frac;
+    const double n_steps = (t - now) / dt;
+    for (n=0; n<(int)n_steps; n++) {
+        Update (self);
+    }
+    frac = n_steps - (int)n_steps;
+    if (frac > 0){
+        printf("WARNING: PET trying to update a fraction of a timestep\n");
+        
+        // change timestep to remaining fraction & call update()
+        pet->bmi.time_step_size_s = frac * dt;
+        Update (self);
+        pet->bmi.time_step_size_s = dt;
+    }
+
+    }
+
+  return BMI_SUCCESS;
+}
+/*static int
 Update_until(Bmi *self, double t)
 {
 
@@ -280,7 +321,8 @@ Update_until(Bmi *self, double t)
     // If we arrive here, t wasn't an exact time at end of a time step or a valid relative time step jump, so invalid.
     return BMI_FAILURE;
     
-}
+}*/
+
 
 pet_model *
 new_bmi_pet()
