@@ -140,7 +140,7 @@ Update (Bmi *self)
     return BMI_SUCCESS;
 }
 
-// Implimenting a more standard version of update_until here...
+// JLG: Implimenting a more standard version of update_until here...
 
 static int 
 Update_until (Bmi *self, double t)
