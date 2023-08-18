@@ -390,7 +390,7 @@ main(int argc, const char *argv[]){
         int added_nstep=5;
         int total_nstep= added_nstep + test_nstep;
         printf("\n updating until... new total timesteps in test loop: %i\n", total_nstep);
-        status = model->update_until(model,total_nstep);
+        status = model->update_until(model,total_nstep*dt);
         if (status == BMI_FAILURE) return BMI_FAILURE;
         // confirm updated current time
         model->get_current_time(model, &now);
