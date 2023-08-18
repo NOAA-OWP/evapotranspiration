@@ -35,8 +35,8 @@ jobs:
    # - name: check gcc version
    #   run: gcc --version
     
-   # - name: Build and Run Standalone - read forcing option
-   #   run: ./make_and_run_read_forcings.sh
+    - name: Build and Run Standalone - read forcing option
+      run: ./make_and_run_read_forcings.sh
         
   #  - name: Build and Run Standalone - pass forcing option
   #    run: |
@@ -45,7 +45,3 @@ jobs:
         
     - name: Build and Run BMI Unit Test
       run: cd test && ./make_and_run_bmi_unit_test.sh
-      #run: |
-      #  cd test
-      #  gcc -o run_pet_bmi_test ./main_unit_test_bmi.c ../src/bmi_pet.c ../src/pet.c -lm
-      #  ./run_pet_bmi_test ../configs/pet_config_bmi_unit_test.txt
