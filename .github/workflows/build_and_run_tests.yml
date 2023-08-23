@@ -36,20 +36,15 @@ jobs:
    #   run: gcc --version
     
     - name: Build and Run Standalone - read forcing option
-   #   run: ./make_and_run_read_forcings.sh
-      run: |
-        gcc ./src/main_read_forcing.c ./src/pet.c ./src/bmi_pet.c -lm -o run_bmi_forcings_read
-        ./run_bmi_forcings_read ./configs/pet_config_unit_test1.txt 
-   # ./run_bmi_forcings_read ./configs/pet_config_unit_test2.txt 
-   # ./run_bmi_forcings_read ./configs/pet_config_unit_test3.txt 
-   # ./run_bmi_forcings_read ./configs/pet_config_unit_test4.txt 
-   # ./run_bmi_forcings_read ./configs/pet_config_unit_test5.txt 
-   # ./run_bmi_forcings_read ./configs/pet_config_cat_67.txt
+      run: ./make_and_run_read_forcings.sh
+   #   run: |
+   #     gcc ./src/main_read_forcing.c ./src/pet.c ./src/bmi_pet.c -lm -o run_bmi_forcings_read
+   #     ./run_bmi_forcings_read ./configs/pet_config_unit_test1.txt 
         
   #  - name: Build and Run Standalone - pass forcing option
   #    run: |
   #      git submodule update --init
   #      ./make_and_run_pass_forcings.sh
         
-  #  - name: Build and Run BMI Unit Test
-  #    run: cd test && ./make_and_run_bmi_unit_test.sh
+    - name: Build and Run BMI Unit Test
+      run: cd test && ./make_and_run_bmi_unit_test.sh
