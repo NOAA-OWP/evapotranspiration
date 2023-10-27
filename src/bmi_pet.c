@@ -113,7 +113,7 @@ Initialize (Bmi *self, const char *cfg_file)
             if (i == 0)
                 pet->bmi.current_time =forcings.time;
         }
-        fclose(ffp):
+        fclose(ffp);
     }
 
     // Set the current time step to the first idem in the forcing time series.
