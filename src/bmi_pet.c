@@ -113,6 +113,7 @@ Initialize (Bmi *self, const char *cfg_file)
             if (i == 0)
                 pet->bmi.current_time =forcings.time;
         }
+        fclose(ffp):
     }
 
     // Set the current time step to the first item in the forcing time series.
@@ -772,7 +773,7 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
         }
 
     } // end loop through config
-
+    fclose(fp);
     return BMI_SUCCESS;
 } // end: read_init_config
 
