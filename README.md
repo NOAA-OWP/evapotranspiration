@@ -6,7 +6,7 @@
 * Priestley Taylor method
 
 # The configuration file (./configs/pet_config*.txt)
-Many options are available when running this PET module. One option is passed into the executable, and that is the speficic PET method option, the rest are passed in through the configuration file. These include forcing data (type and location), vegetation characteristics, site latitude/longitude/elevation, turbidity roughness and options about the forcings available vs calculated and assumed. Each instance of a PET model should have its own unique configuration file. 
+Many options are available when running this PET module. One option is passed into the executable, and that is the specific PET method option, the rest are passed in through the configuration file. These include forcing data (type and location), vegetation characteristics, site latitude/longitude/elevation, turbidity roughness and options about the forcings available vs calculated and assumed. Each instance of a PET model should have its own unique configuration file. 
 
 # Compiling this code
 The BMI functionality was developed as a standalone module in C. To compile this code the developer used these steps:
@@ -19,7 +19,7 @@ This should generate an executable called **run_bmi**. To run this executable yo
 4. Priestley Taylor method: `./run_bmi pet_config_unit_test4.txt`
 5. Penman Monteith method: `./run_bmi pet_config_unit_test5.txt`  
 Included in this repository is an environment file (env_cheyenne.sh), and two "make and run" files. `make_and_run_read_forcings.sh` will compile the code and run the five PET methods. 
-The other is `make_and_run_pass_forcings.sh`, which is an example of how the PET model will be run in a framework, where the forcing values are passed in through BMI functions (e.g., set_value()). An environment file exists, which should allow you to run compile and run the potential evaporation routines: `source env_cheyenne.sh`. Then all you need to do is run one or both of the two scrips:
+The other is `make_and_run_pass_forcings.sh`, which is an example of how the PET model will be run in a framework, where the forcing values are passed in through BMI functions (e.g., set_value()). An environment file exists, which should allow you to run compile and run the potential evaporation routines: `source env_cheyenne.sh`. Then all you need to do is run one or both of the two scripts:
 1. `./make_and_run_read_forcings.sh`  
 2. `./make_and_run_pass_forcings.sh`  (**note:** if running with this script, you need to first get the forcing code from its repo by running `git submodule update --init` from the main level of the `evapotranspiration` directory.
 
@@ -75,7 +75,7 @@ The heat transfer roughness length `zoh` can be approximated as `0.1*zom`.
 This code was minimally changed from the author's original version. These minor changes were made by Nextgen NWM formulation team:
 * Much of this C code was moved to `*.h` files, with the intention of being more easily integrated into the Nextgen Framework. It turned out that this step was not strictly necessary, and that this standalone module could use the standard `*.c` files. See known issues below for a discussion on turning these back to `*.c` files.
 * At one point the C code was slightly modified to compile as C++ code. This was intended for easier integration with the Nextgen Framework. This was reversed when developed as a standalone module.
-* Functions that are neccessary for PET calculations, but are not part of an individual method (e.g., `calculate_solar_radiation`), were moved to this file: `./include/pet_tools.h`
+* Functions that are necessary for PET calculations, but are not part of an individual method (e.g., `calculate_solar_radiation`), were moved to this file: `./include/pet_tools.h`
 * The PET code was split up so that the functions were in standalone files, and they could be called independently. An example: `EtPenmanMonteithMethod.h`
 * Variables within the PET functions (e.g., `psychrometric_constant_Pa_per_C`) are passed as part of the model structure (e.g., `model->inter_vars.psychrometric_constant_Pa_per_C`)
 
