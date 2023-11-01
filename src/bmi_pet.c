@@ -27,7 +27,7 @@ Initialize (Bmi *self, const char *cfg_file)
     /*
         We might be taking forcing data from the framework via BMI.
         Or we might be reading in our own forcing data. 
-        We need a logical function to determin this functionality.
+        We need a logical function to determine this functionality.
         We will use the pet->bmi.is_forcing_from_bmi as the boolean option.
         That should be determined in pet_setup.
     */
@@ -115,7 +115,7 @@ Initialize (Bmi *self, const char *cfg_file)
         }
     }
 
-    // Set the current time step to the first idem in the forcing time series.
+    // Set the current time step to the first item in the forcing time series.
     // But should this be an option? Would we ever initialize to a point in the
     //     middle of a forcing file?
     pet->bmi.current_step = 0;
@@ -140,7 +140,7 @@ Update (Bmi *self)
     return BMI_SUCCESS;
 }
 
-// JLG: Implimenting a more standard version of update_until here...
+// JLG: Implementing a more standard version of update_until here...
 
 static int 
 Update_until (Bmi *self, double t)
@@ -553,7 +553,7 @@ int read_file_line_counts_pet(const char* file_name, int* line_count, int* max_l
     }
     int seen_non_whitespace = 0;
     int c; //EOF is a negative constant...and char may be either signed OR unsigned
-    //depending on the compiler, system, achitectured, ect.  So there are cases
+    //depending on the compiler, system, architecture, etc.  So there are cases
     //where this loop could go infinite comparing EOF to unsigned char
     //the return of fgetc is int, and should be stored as such!
     //https://stackoverflow.com/questions/35356322/difference-between-int-and-char-in-getchar-fgetc-and-putchar-fputc
@@ -1313,4 +1313,4 @@ register_bmi_pet(Bmi *model)
     }
 
     return model;
-}  // end: tegister_bmi_et
+}  // end: register_bmi_et
