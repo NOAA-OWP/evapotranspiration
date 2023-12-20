@@ -98,14 +98,9 @@ jobs:
           mod-dir: "extern/evapotranspiration/evapotranspiration"
           targets: "petbmi"
 
-      - name: Run Ngen Test
+      - name: Run Ngen Test with PET
         run: |
-          # Run ngen with topmodel with CFE
+          # Run ngen with PET with CFE
           mv ${{ steps.ngen_id1.outputs.build-dir }} ./ngen-build/
-          inputfile='data/example_bmi_multi_realization_config.json'
-          ./ngen-build/ngen ./data/catchment_data.geojson "cat-27" ./data/nexus_data.geojson "nex-26" $inputfile
-
-      - name: Run surfacebmi, cfebmi and petbmi
-        run: |
           inputfile='data/example_bmi_multi_realization_config_w_noah_pet_cfe.json'
           ./ngen-build/ngen ./data/catchment_data.geojson "cat-27" ./data/nexus_data.geojson "nex-26" $inputfile
