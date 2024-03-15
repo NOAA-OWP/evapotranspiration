@@ -243,7 +243,7 @@ void calculate_solar_radiation(pet_model* model)
   double optical_air_mass;
 
   int pet_doy = model->surf_rad_forcing.day_of_year;
-  int pet_zulu_time = model->surf_rad_forcing.zulu_time;
+  double pet_zulu_time = model->surf_rad_forcing.zulu_time;
 
   solar_constant_W_per_sq_m = 1361.6;     // Dudock de Wit et al. 2017 GRL, approx. avg. value
 
