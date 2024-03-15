@@ -267,17 +267,19 @@ void pet_setup(pet_model* model)
 void pet_unit_tests(pet_model* model)
 {
   printf("\n #----------- BEGIN UNIT TESTS   ---------------# \n");
-  
+  printf("\n # Solar calcs assume LAT & LON from ./configs/pet_config_cat_67.txt# \n");
+  printf("\n # And that pet_doy = 208 & pet_zulu_time = 20.567\n");
+
   printf("\n #-----------       UNIT TEST    ---------------# \n");
-  printf("solar elevation angle is %lf degrees,\n and should be: 43.29101185 degrees \n",
+  printf("solar elevation angle is %lf degrees,\n and should be: 43.168329 degrees \n",
       model->solar_results.solar_elevation_angle_degrees);
   
   printf("\n #-----------       UNIT TEST    ---------------# \n");
-  printf("solar azimuth angle is %lf degrees,\n and should be: 225.06371958 degrees \n",
+  printf("solar azimuth angle is %lf degrees,\n and should be: 224.010087 degrees \n",
       model->solar_results.solar_azimuth_angle_degrees);
   
   printf("\n #-----------       UNIT TEST    ---------------# \n");
-  printf("solar local hour angle is %lf degrees,\n and should be: 31.01549773 degrees \n",
+  printf("solar local hour angle is %lf degrees,\n and should be: 30.447448 degrees \n",
       model->solar_results.solar_local_hour_angle_degrees);
   printf("\n #-----------       UNIT TEST    ---------------# \n");
   if (model->pet_options.use_energy_balance_method == 1)
@@ -289,7 +291,7 @@ void pet_unit_tests(pet_model* model)
   if (model->pet_options.use_priestley_taylor_method == 1)
       printf("potential ET is %8.6e m/s,\n and should be: 8.249098e-08 m/s \n", model->pet_m_per_s);
   if (model->pet_options.use_penman_monteith_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 1.106268e-08 m/s \n", model->pet_m_per_s);
+      printf("potential ET is %8.6e m/s,\n and should be: 7.628671e-08 m/s \n", model->pet_m_per_s);
 
   printf("\n #------------  END UNIT TESTS   ---------------# \n");
   printf("\n");
