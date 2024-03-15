@@ -700,6 +700,14 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
             }
             continue;
         }
+        if (strcmp(param_key, "heat_transfer_roughness_length_m") == 0) {
+            model->pet_params.heat_transfer_roughness_length_m = strtod(param_value, NULL);
+            if(model->bmi.verbose >=2){
+                printf("heat_transfer_roughness_length_m from config file \n");
+                printf("%lf\n", model->pet_params.heat_transfer_roughness_length_m);
+            }
+            continue;
+        }
         if (strcmp(param_key, "surface_longwave_emissivity") == 0) {
             model->surf_rad_params.surface_longwave_emissivity = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
