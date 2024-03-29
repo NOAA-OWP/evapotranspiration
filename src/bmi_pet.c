@@ -73,15 +73,20 @@ Initialize (Bmi *self, const char *cfg_file)
         char line_str[max_forcing_line_length + 1];
         long year, month, day, hour, minute;
         double dsec;
+        char* ret = NULL;
         // First read the header line
-        fgets(line_str, max_forcing_line_length + 1, ffp);
-    
+        ret = fgets(line_str, max_forcing_line_length + 1, ffp);
+        if (ret == NULL)
+            return BMI_FAILURE;
+
         if (pet->bmi.verbose > 2) 
             printf("the number of time steps from the forcing file is: %8.6e \n", (double)pet->bmi.num_timesteps);
     
         aorc_forcing_data_pet forcings;
         for (int i = 0; i < pet->bmi.num_timesteps; i++) {
-            fgets(line_str, max_forcing_line_length + 1, ffp);  // read in a line of AORC data.
+            ret = fgets(line_str, max_forcing_line_length + 1, ffp);  // read in a line of AORC data.
+            if (ret == NULL)
+                return BMI_FAILURE;
             parse_aorc_line_pet(line_str, &year, &month, &day, &hour, &minute, &dsec, &forcings);
             pet->forcing_data_precip_kg_per_m2[i] = forcings.precip_kg_per_m2 * ((double)pet->bmi.time_step_size_s);
             if (pet->bmi.verbose >4)
@@ -602,13 +607,17 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
     if (fp == NULL)
         return BMI_FAILURE;
 
+    char* ret = NULL;
+
     // TODO: document config file format (<param_key>=<param_val>, where array values are comma delim strings)
 
     char config_line[max_config_line_length + 1];
 
     for (int i = 0; i < config_line_count; i++) {
         char *param_key, *param_value;
-        fgets(config_line, max_config_line_length + 1, fp);
+        ret = fgets(config_line, max_config_line_length + 1, fp);
+        if (ret == NULL)
+            return BMI_FAILURE;
         char* config_line_ptr = config_line;
         config_line_ptr = strsep(&config_line_ptr, "\n");
         param_key = strsep(&config_line_ptr, "=");
