@@ -77,7 +77,7 @@ Initialize (Bmi *self, const char *cfg_file)
         fgets(line_str, max_forcing_line_length + 1, ffp);
     
         if (pet->bmi.verbose > 2) 
-            printf("the number of time steps from the forcing file is: %8.6e \n", pet->bmi.num_timesteps);
+            printf("the number of time steps from the forcing file is: %8.6e \n", (double)pet->bmi.num_timesteps);
     
         aorc_forcing_data_pet forcings;
         for (int i = 0; i < pet->bmi.num_timesteps; i++) {
@@ -514,7 +514,7 @@ static int Get_current_time (Bmi *self, double * time)
 {
     Get_start_time(self, time);
     if (((pet_model *) self->data)->bmi.verbose > 2){
-        printf("Current model time step: '%ld'\n", ((pet_model *) self->data)->bmi.current_time_step);
+        printf("Current model time step: '%8.6e'\n", ((pet_model *) self->data)->bmi.current_time_step);
     }
     *time += (((pet_model *) self->data)->bmi.current_step * 
               ((pet_model *) self->data)->bmi.time_step_size_s);
@@ -760,7 +760,7 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
             model->bmi.time_step_size_s = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("time_step_size_s from config file \n");
-                printf("%d\n", model->bmi.time_step_size_s);
+                printf("%ld\n", model->bmi.time_step_size_s);
             }
             continue;
         }
