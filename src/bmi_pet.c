@@ -769,7 +769,7 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
             model->bmi.time_step_size_s = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("time_step_size_s from config file \n");
-                printf("%ld\n", model->bmi.time_step_size_s);
+                printf("%d\n", model->bmi.time_step_size_s);
             }
             continue;
         }
@@ -777,7 +777,7 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
             model->bmi.num_timesteps = strtod(param_value, NULL);
             if(model->bmi.verbose >=2){
                 printf("num_timesteps from config file \n");
-                printf("%d\n", model->bmi.num_timesteps);
+                printf("%ld\n", model->bmi.num_timesteps);
             }
             continue;
         }
