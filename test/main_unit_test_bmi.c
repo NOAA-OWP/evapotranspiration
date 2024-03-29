@@ -282,7 +282,7 @@ main(int argc, const char *argv[]){
             {
                 status = model->get_value_ptr(model, var_name, (void**)(&var));
                 if (status == BMI_FAILURE)return BMI_FAILURE;
-                printf("   get value ptr: %f\n",var);
+                printf("   get value ptr: %p\n",var);
             }
             // Go ahead and test set_value_*() for last time step here
             if (n == test_nstep){
@@ -346,7 +346,7 @@ main(int argc, const char *argv[]){
             {
                 status = model->get_value_ptr(model, var_name, (void**)(&var));
                 if (status == BMI_FAILURE)return BMI_FAILURE;
-                printf("   get value ptr: %f\n",var);
+                printf("   get value ptr: %p\n",var);
             }
             // Go ahead and test set_value_*() for last time step here
             if (n == test_nstep){
