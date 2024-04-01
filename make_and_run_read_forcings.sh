@@ -1,5 +1,8 @@
 #!/bin/bash
-gcc -Werror ./src/main_read_forcing.c ./src/pet.c ./src/bmi_pet.c -lm -o run_bmi_forcings_read
+
+set -ex
+
+gcc -Werror -Og ./src/main_read_forcing.c ./src/pet.c ./src/bmi_pet.c -lm -o run_bmi_forcings_read
 ./run_bmi_forcings_read ./configs/pet_config_unit_test1.txt 
 ./run_bmi_forcings_read ./configs/pet_config_unit_test2.txt 
 ./run_bmi_forcings_read ./configs/pet_config_unit_test3.txt 
