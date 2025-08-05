@@ -21,37 +21,7 @@ extern void alloc_pet_model(pet_model *model) {
 }
 
 extern void free_pet_model(pet_model *model) {
-    if (model != NULL) {
-      // serialized data
-      if (model->serialized != NULL)
-        free(model->serialized);
-
-      // should be safe to free since it's assigned by copy
-      if (model->forcing_file != NULL)
-        free(model->forcing_file);
-
-      // property arrays
-      if (model->forcing_data_precip_kg_per_m2 != NULL)
-        free(model->forcing_data_precip_kg_per_m2);
-      if (model->forcing_data_surface_pressure_Pa != NULL)
-        free(model->forcing_data_surface_pressure_Pa);
-      if (model->forcing_data_time != NULL)
-        free(model->forcing_data_time);
-      if (model->forcing_data_incoming_longwave_W_per_m2 != NULL)
-        free(model->forcing_data_incoming_longwave_W_per_m2);
-      if (model->forcing_data_incoming_shortwave_W_per_m2 != NULL)
-        free(model->forcing_data_incoming_shortwave_W_per_m2);
-      if (model->forcing_data_specific_humidity_2m_kg_per_kg != NULL)
-        free(model->forcing_data_specific_humidity_2m_kg_per_kg);
-      if (model->forcing_data_air_temperature_2m_K != NULL)
-        free(model->forcing_data_air_temperature_2m_K);
-      if (model->forcing_data_u_wind_speed_10m_m_per_s != NULL)
-        free(model->forcing_data_u_wind_speed_10m_m_per_s);
-      if (model->forcing_data_v_wind_speed_10m_m_per_s != NULL)
-        free(model->forcing_data_v_wind_speed_10m_m_per_s);
-
-      free(model);
-    }
+    // TODO: ******************
 }
 
 // ######################    RUN    ########    RUN    ########    RUN    ########    RUN    #################################

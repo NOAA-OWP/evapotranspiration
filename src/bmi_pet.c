@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include "../include/pet.h"
 #include "../include/bmi.h"
-#include "../include/pet_serialization.h"
 #include "../include/bmi_pet.h"
 
 #define INPUT_VAR_NAME_COUNT 7 //
@@ -351,7 +350,6 @@ Finalize (Bmi *self)
 
   if (self){
     pet_model* model = (pet_model *)(self->data);
-    free_pet_model(model);
     self->data = (void*)new_bmi_pet();
   }
   return BMI_SUCCESS;
@@ -798,17 +796,6 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
 
 static int Get_var_type (Bmi *self, const char *name, char * type)
 {
-    // special serialization messages
-    if (strcmp(name, "serialization_create") == 0) {
-        strncpy(type, "uint64_t", BMI_MAX_TYPE_NAME);
-        return BMI_SUCCESS;
-    } else if (strcmp(name, "serialization_state") == 0) {
-        strncpy(type, "char", BMI_MAX_TYPE_NAME);
-        return BMI_SUCCESS;
-    } else if (strcmp(name, "serialization_free") == 0) {
-        strncpy(type, "int", BMI_MAX_TYPE_NAME);
-        return BMI_SUCCESS;
-    }
     // Check to see if in output array first
     for (int i = 0; i < OUTPUT_VAR_NAME_COUNT; i++) {
         if (strcmp(name, output_var_names[i]) == 0) {
@@ -854,14 +841,6 @@ static int Get_var_itemsize (Bmi *self, const char *name, int * size)
     }
     else if (strcmp (type, "long") == 0) {
         *size = sizeof(long);
-        return BMI_SUCCESS;
-    }
-    else if (strcmp(type, "uint64_t") == 0) {
-        *size = sizeof(uint64_t);
-        return BMI_SUCCESS;
-    }
-    else if (strcmp(type, "char") == 0) {
-        *size = sizeof(char);
         return BMI_SUCCESS;
     }
     else {
@@ -989,25 +968,6 @@ static int Get_value_ptr (Bmi *self, const char *name, void **dest)
         return BMI_SUCCESS;
     }
 
-    // serialiation
-    if (strcmp(name, "serialization_create") == 0) {
-        if (new_serialized_pet(self) != BMI_SUCCESS) {
-            return BMI_FAILURE;
-        }
-        pet_model *pet = (pet_model *)self->data;
-        *dest = &pet->serialized_length;
-        return BMI_SUCCESS;
-    }
-    if (strcmp(name, "serialization_state") == 0) {
-        pet_model *pet = (pet_model *)self->data;
-        if (pet->serialized == NULL) {
-            // Log(SEVERE, "PET serialization has not been.");
-            return BMI_FAILURE;
-        }
-        *dest = pet->serialized;
-        return BMI_SUCCESS;
-    }
-
     return BMI_FAILURE;
 }
 
@@ -1055,16 +1015,6 @@ static int Get_value(Bmi * self, const char * name, void *dest)
 
 static int Set_value (Bmi *self, const char *name, void *array)
 {
-    // special cases for serialization
-    if (strcmp(name, "serialization_state") == 0) {
-        return load_serialized_pet(self, (char*)array);
-    } else if (strcmp(name, "serialization_free") == 0) {
-        return free_serialized_pet(self);
-    } else if (strcmp(name, "serialization_create") == 0) {
-        // Log(WARNING, "Cannot use \"serialization_create\" to set a value.");
-        return BMI_FAILURE;
-    }
-
     void * dest = NULL;
     int nbytes = 0;
 
@@ -1170,18 +1120,6 @@ static int Get_var_units (Bmi *self, const char *name, char * units)
 //----------------------------------------------------------------------
 static int Get_var_nbytes (Bmi *self, const char *name, int * nbytes)
 {
-    // special serialization messages
-    if (strcmp(name, "serialization_create") == 0) {
-        *nbytes = sizeof(uint64_t);
-        return BMI_SUCCESS;
-    } else if (strcmp(name, "serialization_state") == 0) {
-        pet_model *model = (pet_model*)self->data;
-        *nbytes = model->serialized_length;
-        return BMI_SUCCESS;
-    } else if (strcmp(name, "serialization_free") == 0) {
-        *nbytes = sizeof(int);
-        return BMI_SUCCESS;
-    }
     int item_size;
     int item_size_result = Get_var_itemsize(self, name, &item_size);
     if (item_size_result != BMI_SUCCESS) {
