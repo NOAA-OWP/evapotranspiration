@@ -62,14 +62,14 @@ double calculate_net_radiation_W_per_sq_m(pet_model *model)
     surface_longwave_albedo=0.03;   // water - actually not this simple, but close enough for now
   }
   
-  if(model->pet_options.yes_aorc==0)  // we must calculate longwave incoming from the atmosphere 
-    saturation_water_vapor_partial_pressure_Pa=calc_air_saturation_vapor_pressure_Pa(model->surf_rad_forcing.air_temperature_C); 
-
-  actual_water_vapor_partial_pressure_Pa=model->surf_rad_forcing.relative_humidity_percent/100.0*
-                                         saturation_water_vapor_partial_pressure_Pa;
-
   if(model->pet_options.yes_aorc==0)
   {
+    // calculate longwave incoming from the atmosphere
+    saturation_water_vapor_partial_pressure_Pa=calc_air_saturation_vapor_pressure_Pa(model->surf_rad_forcing.air_temperature_C); 
+
+    actual_water_vapor_partial_pressure_Pa=model->surf_rad_forcing.relative_humidity_percent/100.0*
+                                         saturation_water_vapor_partial_pressure_Pa;
+
     // CALCULATE DOWNWELLING LONGWAVE RADIATION FLUX FROM ATMOSPHERE, W/m2.
     if(0.90 < model->surf_rad_forcing.cloud_cover_fraction) // very nearly overcast or overcast
     {
