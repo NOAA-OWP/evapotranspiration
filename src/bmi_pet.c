@@ -335,7 +335,7 @@ pet_model *
 new_bmi_pet()
 {
     pet_model *data;
-    data = (pet_model*) malloc(sizeof(pet_model));
+    data = (pet_model*) calloc(1, sizeof(pet_model));
 
     return data;
 }
