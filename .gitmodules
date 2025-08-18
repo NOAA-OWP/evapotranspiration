@@ -1,3 +1,3 @@
 [submodule "extern/forcing_code"]
 	path = extern/forcing_code
-	url = https://gitlab.sh.nextgenwaterprediction.com/NGWPC/nwm-ngen/aorc_bmi.git
+	url = https://github.com/NGWPC/aorc_bmi.git
