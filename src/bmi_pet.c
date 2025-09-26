@@ -802,6 +802,9 @@ static int Get_var_type (Bmi *self, const char *name, char * type)
     if (strcmp(name, "serialization_create") == 0) {
         strncpy(type, "uint64_t", BMI_MAX_TYPE_NAME);
         return BMI_SUCCESS;
+    } else if (strcmp(name, "serialization_size") == 0) {
+        strncpy(type, "uint64_t", BMI_MAX_TYPE_NAME);
+        return BMI_SUCCESS;
     } else if (strcmp(name, "serialization_state") == 0) {
         strncpy(type, "char", BMI_MAX_TYPE_NAME);
         return BMI_SUCCESS;
@@ -990,11 +993,12 @@ static int Get_value_ptr (Bmi *self, const char *name, void **dest)
     }
 
     // serialiation
-    if (strcmp(name, "serialization_create") == 0) {
-        if (new_serialized_pet(self) != BMI_SUCCESS) {
+    if (strcmp(name, "serialization_size") == 0) {
+        pet_model *pet = (pet_model *)self->data;
+        if (pet->serialized == NULL) {
+            // Log(SEVERE, "PET serialization has not been.");
             return BMI_FAILURE;
         }
-        pet_model *pet = (pet_model *)self->data;
         *dest = &pet->serialized_length;
         return BMI_SUCCESS;
     }
@@ -1056,13 +1060,12 @@ static int Get_value(Bmi * self, const char * name, void *dest)
 static int Set_value (Bmi *self, const char *name, void *array)
 {
     // special cases for serialization
-    if (strcmp(name, "serialization_state") == 0) {
+    if (strcmp(name, "serialization_create") == 0) {
+        return new_serialized_pet(self);
+    } else if (strcmp(name, "serialization_state") == 0) {
         return load_serialized_pet(self, (char*)array);
     } else if (strcmp(name, "serialization_free") == 0) {
         return free_serialized_pet(self);
-    } else if (strcmp(name, "serialization_create") == 0) {
-        // Log(WARNING, "Cannot use \"serialization_create\" to set a value.");
-        return BMI_FAILURE;
     }
 
     void * dest = NULL;
@@ -1171,7 +1174,7 @@ static int Get_var_units (Bmi *self, const char *name, char * units)
 static int Get_var_nbytes (Bmi *self, const char *name, int * nbytes)
 {
     // special serialization messages
-    if (strcmp(name, "serialization_create") == 0) {
+    if (strcmp(name, "serialization_create") == 0 || strcmp(name, "serialization_size") == 0) {
         *nbytes = sizeof(uint64_t);
         return BMI_SUCCESS;
     } else if (strcmp(name, "serialization_state") == 0) {
