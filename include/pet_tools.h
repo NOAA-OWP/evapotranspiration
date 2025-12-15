@@ -456,8 +456,7 @@ void calculate_intermediate_variables(pet_model* model)
   // gamma
   water_latent_heat_of_vaporization_J_per_kg=2.501e+06-2370.0*model->pet_forcing.water_temperature_C;  // eqn 2.7.6 Chow etal.
                                                                                               // aka 'lambda'
-  psychrometric_constant_Pa_per_C=CP*model->pet_forcing.air_pressure_Pa*
-                                  model->pet_params.heat_transfer_roughness_length_m/
+  psychrometric_constant_Pa_per_C=CP*model->pet_forcing.air_pressure_Pa/
                                   (0.622*water_latent_heat_of_vaporization_J_per_kg);
   gamma=psychrometric_constant_Pa_per_C;
 
