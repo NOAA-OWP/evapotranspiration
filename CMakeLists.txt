@@ -13,16 +13,26 @@ set(PET_LIB_DESC_CMAKE "OWP PET BMI Module Shared Library")
 add_compile_definitions(BMI_ACTIVE)
 
 if(WIN32)
-    add_library(petbmi src/bmi_pet.c src/pet.c)
+    add_library(petbmi src/bmi_pet.c src/pet.c src/pet_serialization.cpp)
 else()
-    add_library(petbmi SHARED src/bmi_pet.c src/pet.c)
+    add_library(petbmi SHARED src/bmi_pet.c src/pet.c src/pet_serialization.cpp)
 endif()
 
+# -----------------------------------------------------------------------------
+# Find the Boost library and configure usage
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.79.0 REQUIRED COMPONENTS serialization)
+
+target_link_libraries(petbmi PRIVATE Boost::serialization)
 target_include_directories(petbmi PRIVATE include)
 
 set_target_properties(petbmi PROPERTIES VERSION ${PROJECT_VERSION})
 
 set_target_properties(petbmi PROPERTIES PUBLIC_HEADER bmi_pet.h)
+
+target_link_libraries(petbmi PRIVATE Boost::serialization)
 
 # Code requires minimum of C99 standard to compile
 set_target_properties(petbmi PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED ON)

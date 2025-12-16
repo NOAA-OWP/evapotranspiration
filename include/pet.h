@@ -5,6 +5,7 @@
 #include <math.h>
 #include <string.h>
 #include <float.h>  // JG EDIT
+#include <stdint.h>
 
 #define TRUE  1
 #define FALSE 0
@@ -266,6 +267,10 @@ struct pet_model{
   struct solar_radiation_results    solar_results;
 
   struct pet_bmi bmi;
+
+  // serialization data
+  char* serialized;
+  uint64_t serialized_length;
 
 };
 typedef struct pet_model pet_model;
