@@ -62,14 +62,14 @@ double calculate_net_radiation_W_per_sq_m(pet_model *model)
     surface_longwave_albedo=0.03;   // water - actually not this simple, but close enough for now
   }
   
-  if(model->pet_options.yes_aorc==0)  // we must calculate longwave incoming from the atmosphere 
-    saturation_water_vapor_partial_pressure_Pa=calc_air_saturation_vapor_pressure_Pa(model->surf_rad_forcing.air_temperature_C); 
-
-  actual_water_vapor_partial_pressure_Pa=model->surf_rad_forcing.relative_humidity_percent/100.0*
-                                         saturation_water_vapor_partial_pressure_Pa;
-
   if(model->pet_options.yes_aorc==0)
   {
+    // calculate longwave incoming from the atmosphere
+    saturation_water_vapor_partial_pressure_Pa=calc_air_saturation_vapor_pressure_Pa(model->surf_rad_forcing.air_temperature_C); 
+
+    actual_water_vapor_partial_pressure_Pa=model->surf_rad_forcing.relative_humidity_percent/100.0*
+                                         saturation_water_vapor_partial_pressure_Pa;
+
     // CALCULATE DOWNWELLING LONGWAVE RADIATION FLUX FROM ATMOSPHERE, W/m2.
     if(0.90 < model->surf_rad_forcing.cloud_cover_fraction) // very nearly overcast or overcast
     {
@@ -390,8 +390,6 @@ void calculate_intermediate_variables(pet_model* model)
   double moist_air_specific_humidity_kg_per_m3;
   double vapor_pressure_deficit_Pa;
   double liquid_water_density_kg_per_m3;
-  double delta;
-  double gamma;
 
   // IF SOIL WATER TEMPERATURE NOT PROVIDED, USE A SANE VALUE
   if(100.0 > model->pet_forcing.water_temperature_C) model->pet_forcing.water_temperature_C=22.0; // growing season
@@ -400,8 +398,6 @@ void calculate_intermediate_variables(pet_model* model)
 
   liquid_water_density_kg_per_m3 = calc_liquid_water_density_kg_per_m3(model->pet_forcing.water_temperature_C); // rho_w
 
-  water_latent_heat_of_vaporization_J_per_kg=2.501e+06-2370.0*model->pet_forcing.water_temperature_C;  // eqn 2.7.6 Chow etal.
-                                                                                              // aka 'lambda'
   // all methods other than radiation balance method involve at least some of the aerodynamic method calculations
 
   // IF HEAT/MOMENTUM ROUGHNESS LENGTHS NOT GIVEN, USE DEFAULTS SO THAT THEIR RATIO IS EQUAL TO 1.
@@ -451,14 +447,12 @@ void calculate_intermediate_variables(pet_model* model)
 
   // DELTA
   slope_sat_vap_press_curve_Pa_s=calc_slope_of_air_saturation_vapor_pressure_Pa_per_C(model->pet_forcing.air_temperature_C); 
-  delta=slope_sat_vap_press_curve_Pa_s;
 
   // gamma
   water_latent_heat_of_vaporization_J_per_kg=2.501e+06-2370.0*model->pet_forcing.water_temperature_C;  // eqn 2.7.6 Chow etal.
                                                                                               // aka 'lambda'
   psychrometric_constant_Pa_per_C=CP*model->pet_forcing.air_pressure_Pa/
                                   (0.622*water_latent_heat_of_vaporization_J_per_kg);
-  gamma=psychrometric_constant_Pa_per_C;
 
   model->inter_vars.liquid_water_density_kg_per_m3=liquid_water_density_kg_per_m3;
   model->inter_vars.water_latent_heat_of_vaporization_J_per_kg=water_latent_heat_of_vaporization_J_per_kg;

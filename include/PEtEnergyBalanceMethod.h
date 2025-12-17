@@ -34,7 +34,6 @@ double pevapotranspiration_energy_balance_method(pet_model *model)
   // We need this in all options except for aerodynamic or Penman-Monteith methods.
   // Radiation balance is the simplest method.  Involves only radiation calculations, no aerodynamic calculations.
 
-  lambda_pet=0.0;
   if( (model->pet_options.use_aerodynamic_method == FALSE ) && (model->pet_options.use_penman_monteith_method==FALSE) )
   {
     // This is equation 3.5.9 from Chow, Maidment, and Mays textbook.

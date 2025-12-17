@@ -28,7 +28,6 @@ double pevapotranspiration_penman_monteith_method(pet_model *model)
   double slope_sat_vap_press_curve_Pa_s;
   double moist_air_density_kg_per_m3;
   double water_latent_heat_of_vaporization_J_per_kg;
-  double moist_air_gas_constant_J_per_kg_K;
   double moist_air_specific_humidity_kg_per_m3;
   double vapor_pressure_deficit_Pa;
   double liquid_water_density_kg_per_m3;
@@ -39,9 +38,7 @@ double pevapotranspiration_penman_monteith_method(pet_model *model)
   calculate_intermediate_variables(model);
 
   liquid_water_density_kg_per_m3 = model->inter_vars.liquid_water_density_kg_per_m3;
-  water_latent_heat_of_vaporization_J_per_kg=model->inter_vars.water_latent_heat_of_vaporization_J_per_kg;
   vapor_pressure_deficit_Pa=model->inter_vars.vapor_pressure_deficit_Pa;
-  moist_air_gas_constant_J_per_kg_K=model->inter_vars.moist_air_gas_constant_J_per_kg_K;
   moist_air_density_kg_per_m3=model->inter_vars.moist_air_density_kg_per_m3;
   slope_sat_vap_press_curve_Pa_s=model->inter_vars.slope_sat_vap_press_curve_Pa_s;
   water_latent_heat_of_vaporization_J_per_kg=model->inter_vars.water_latent_heat_of_vaporization_J_per_kg;
