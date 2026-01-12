@@ -46,6 +46,16 @@ jobs:
         with:
           repository: noaa-owp/ngen
 
+      - name: Install gcc12 on MacOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc@12
+          # Hopefully, these aren't needed, but I'm addding them here for docs during test
+          # GCCPATH=$(brew --prefix gcc@12)
+          # echo "PATH=$GCCPATH/bin:$PATH" >> $GITHUB_ENV
+          # echo "LDFLAGS=-L$GCCPATH/lib/gcc/12" >> $GITHUB_ENV
+          # echo "CPPFLAGS=-I$GCCPATH/include" >> $GITHUB_ENV
+
       - name: Build Surfacebmi
         id: submod_build_1
         uses: ./.github/actions/ngen-submod-build
@@ -91,16 +101,6 @@ jobs:
           # Move files to appropriate directory to build evapotranspiration library
           rm -rf extern/evapotranspiration/evapotranspiration/*
           mv ${{runner.temp}}/evapotranspiration/* extern/evapotranspiration/evapotranspiration
-
-      - name: Install gcc12 on MacOS
-        if: runner.os == 'macOS'
-        run: |
-          brew install gcc@12
-          # Hopefully, these aren't needed, but I'm addding them here for docs during test
-          # GCCPATH=$(brew --prefix gcc@12)
-          # echo "PATH=$GCCPATH/bin:$PATH" >> $GITHUB_ENV
-          # echo "LDFLAGS=-L$GCCPATH/lib/gcc/12" >> $GITHUB_ENV
-          # echo "CPPFLAGS=-I$GCCPATH/include" >> $GITHUB_ENV
 
 
       - name: Build PET
