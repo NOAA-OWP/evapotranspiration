@@ -12,6 +12,8 @@ set(PET_LIB_DESC_CMAKE "OWP PET BMI Module Shared Library")
 # Make sure these are compiled with this directive
 add_compile_definitions(BMI_ACTIVE)
 
+add_compile_options(-std=g99)
+
 if(WIN32)
     add_library(petbmi src/bmi_pet.c src/pet.c)
 else()
