@@ -46,6 +46,12 @@ jobs:
         with:
           repository: noaa-owp/ngen
 
+      - name: Install python@3.11 on MacOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install python@3.11
+          echo "PATH=$(brew --prefix python@3.11)/bin:$PATH" >> $GITHUB_ENV
+
       - name: Install gcc12 on MacOS
         if: runner.os == 'macOS'
         run: |
