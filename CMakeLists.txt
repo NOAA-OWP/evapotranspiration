@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Uncomment this and rebuild artifacts to enable debugging
-set(CMAKE_BUILD_TYPE Debug)
-
 project(petbmi VERSION 1.0.0 DESCRIPTION "OWP PET BMI Module Shared Library")
 
 # PET
