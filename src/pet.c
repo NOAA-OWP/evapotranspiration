@@ -34,7 +34,17 @@ extern int run_pet(pet_model* model)
     printf("Running the PET model \n");
     printf("model->bmi.is_forcing_from_bmi %d \n", model->bmi.is_forcing_from_bmi);
   }
-
+  if (model->pet_params.zero_plane_displacement_height_m <= 0.0){
+    fprintf(stderr, "ERROR: zero_plane_displacement_height_m must be > 0.0 m. Current value: %lf\n", model->pet_params.zero_plane_displacement_height_m);
+    exit(EXIT_FAILURE);
+  }
+  if (model->pet_params.wind_speed_measurement_height_m <= model->pet_params.zero_plane_displacement_height_m){
+    // Must be <=, if == then log(1)=0 and divide by 0 occurs
+    fprintf(stderr, "ERROR: wind_speed_measurement_height_m must be > zero_plane_displacement_height_m. Current values: %lf and %lf\n", 
+           model->pet_params.wind_speed_measurement_height_m,
+           model->pet_params.zero_plane_displacement_height_m);
+    exit(EXIT_FAILURE);
+  }
   // populate the evapotranspiration forcing data structure:
   //---------------------------------------------------------------------------------------------------------------
   /*
@@ -81,6 +91,7 @@ extern int run_pet(pet_model* model)
     model->aorc.latitude                       =  model->solar_params.latitude_degrees;
     model->aorc.longitude                      =  model->solar_params.longitude_degrees;
 
+    // Heights validated at beginning of run_pet function
     // wind speed was measured at 10.0 m height, so we need to calculate the wind speed at 2.0m
     double numerator=log(2.0/model->pet_params.zero_plane_displacement_height_m);
     double denominator=log(model->pet_params.wind_speed_measurement_height_m/model->pet_params.zero_plane_displacement_height_m);
@@ -91,8 +102,9 @@ extern int run_pet(pet_model* model)
     model->surf_rad_forcing.incoming_longwave_radiation_W_per_sq_m  = (double)model->aorc.incoming_longwave_W_per_m2; 
     model->surf_rad_forcing.air_temperature_C                       = (double)model->aorc.air_temperature_2m_K-TK;
 
-    // compute relative humidity from specific humidity..
+    // compute relative humidity from specific humidity...
     double saturation_vapor_pressure_Pa = calc_air_saturation_vapor_pressure_Pa(model->surf_rad_forcing.air_temperature_C);
+
     double actual_vapor_pressure_Pa = (double)model->aorc.specific_humidity_2m_kg_per_kg*(double)model->aorc.surface_pressure_Pa/0.622;
 
     model->surf_rad_forcing.relative_humidity_percent = 100.0*actual_vapor_pressure_Pa/saturation_vapor_pressure_Pa;
