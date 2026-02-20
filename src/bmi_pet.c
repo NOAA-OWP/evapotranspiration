@@ -161,7 +161,8 @@ Update_until (Bmi *self, double t)
 
     if(self->get_time_step (self, &dt) == BMI_FAILURE)
         return BMI_FAILURE;
-
+    if(dt == 0.0)
+        return BMI_FAILURE;
     if(self->get_current_time(self, &now) == BMI_FAILURE)
         return BMI_FAILURE;    
 

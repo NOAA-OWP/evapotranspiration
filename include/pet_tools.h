@@ -130,7 +130,10 @@ double calculate_aerodynamic_resistance(pet_model *model)
     fprintf(stderr,"momentum_transfer_roughness_length_m is tiny in calculate_aerodynamic_resistance().  Should not be tiny.\n");
   if(1.0e-06 >= heat_transfer_roughness_length_m )  //warn.  Should not be tiny.
     fprintf(stderr,"heat_transfer_roughness_length_m is tiny in calculate_aerodynamic_resistance().  Should not be tiny.\n");
-
+  if(wind_speed_m_per_s <= 0.0 ) {
+    fprintf(stderr,"WARNING: wind_speed_m_per_s <= in calculate_aerodynamic_resistance(). Setting to 1e-6 m/s.\n");
+    wind_speed_m_per_s = 1e-6; // small positive value to avoid divide by zero
+  }
   // convert to smaller local variable names to keep equation readable 
   zm=wind_speed_measurement_height_m;
   zh=humidity_measurement_height_m; 
@@ -157,9 +160,19 @@ double calculate_aerodynamic_resistance(pet_model *model)
 // based on the exponential relationship defined in Chow,     *
 // Maidment, and Mays,textbook.  Input is air temp C          *
 // F.L. Ogden, NOAA National Weather Service, 2020            *
+// This function is guaranteed to return a value > 0.         *
+// In the unlikely case of air_temperature_C <= -237.3 C,     *
+// the function this function will error/exit.                *
 //############################################################*
 double calc_air_saturation_vapor_pressure_Pa(double air_temperature_C)
 {
+  // temperature should never be this low in practice.
+  // and if it is == then there's a divide by zero...
+  if (air_temperature_C <= -237.3)
+  {
+    fprintf(stderr,"ERROR: air_temperature_C <= -237.3 C in calc_air_saturation_vapor_pressure_Pa().\n");
+    exit(EXIT_FAILURE);
+  }
   double air_sat_vap_press_Pa= 611.0*exp(17.27*air_temperature_C/(237.3+air_temperature_C));  // it is 237.3
 
   return(air_sat_vap_press_Pa);
@@ -172,9 +185,12 @@ double calc_air_saturation_vapor_pressure_Pa(double air_temperature_C)
 // Maidment, and Mays,textbook, Eqn. 3.2.10.  Input is air temp C  *
 // calls function calc_air_saturation_vapor_pressure_Pa().         *
 // F.L. Ogden, NOAA National Weather Service, 2020                 *
+// This function is guaranteed to return a value > 0.              *
 //#################################################################*
 double calc_slope_of_air_saturation_vapor_pressure_Pa_per_C(double air_temperature_C)
 {
+  // calc_air_saturation_vapor_pressure_Pa is guaranteed to return >0
+  // and will error/exit if air_temperature_C <= -237.3
   double slope_of_air_sat_vap_press_curve_Pa_per_C= 
                          4098.0*calc_air_saturation_vapor_pressure_Pa(air_temperature_C)/
                          pow((237.3+air_temperature_C),2.0);  // it is 237.3
@@ -393,6 +409,15 @@ void calculate_intermediate_variables(pet_model* model)
   double delta;
   double gamma;
 
+  // Validate inputs that could cause numerical errors
+  if(model->pet_forcing.air_pressure_Pa <= 0.0) {
+    fprintf(stderr, "Error: forcing variable air_pressure_Pa must be greater than zero in calculate_intermediate_variables().\n");
+    exit(EXIT_FAILURE);
+  }
+  if(model->pet_forcing.air_temperature_C + TK <= 0.0) {
+    fprintf(stderr, "Error: forcing variable air_temperature_C must be greater than %lf in calculate_intermediate_variables().\n", -TK);
+    exit(EXIT_FAILURE);
+  }
   // IF SOIL WATER TEMPERATURE NOT PROVIDED, USE A SANE VALUE
   if(100.0 > model->pet_forcing.water_temperature_C) model->pet_forcing.water_temperature_C=22.0; // growing season
 
