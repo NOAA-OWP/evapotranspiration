@@ -791,6 +791,14 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
 
     } // end loop through config
     fclose(fp);
+
+    // Validate parameters here if needed
+    if (model->pet_params.zero_plane_displacement_height_m <= 0.0){
+        // if displacement height is 0 (or less for some unknown reason...)
+        // set to small value to avoid division by zero in wind profile equation
+        model->pet_params.zero_plane_displacement_height_m = 0.01;
+    }
+
     return BMI_SUCCESS;
 } // end: read_init_config
 
