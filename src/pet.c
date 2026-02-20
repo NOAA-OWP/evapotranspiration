@@ -38,13 +38,6 @@ extern int run_pet(pet_model* model)
     fprintf(stderr, "ERROR: zero_plane_displacement_height_m must be > 0.0 m. Current value: %lf\n", model->pet_params.zero_plane_displacement_height_m);
     exit(EXIT_FAILURE);
   }
-  if (model->pet_params.wind_speed_measurement_height_m <= model->pet_params.zero_plane_displacement_height_m){
-    // Must be <=, if == then log(1)=0 and divide by 0 occurs
-    fprintf(stderr, "ERROR: wind_speed_measurement_height_m must be > zero_plane_displacement_height_m. Current values: %lf and %lf\n", 
-           model->pet_params.wind_speed_measurement_height_m,
-           model->pet_params.zero_plane_displacement_height_m);
-    exit(EXIT_FAILURE);
-  }
   // populate the evapotranspiration forcing data structure:
   //---------------------------------------------------------------------------------------------------------------
   /*
@@ -93,9 +86,18 @@ extern int run_pet(pet_model* model)
 
     // Heights validated at beginning of run_pet function
     // wind speed was measured at 10.0 m height, so we need to calculate the wind speed at 2.0m
-    double numerator=log(2.0/model->pet_params.zero_plane_displacement_height_m);
-    double denominator=log(model->pet_params.wind_speed_measurement_height_m/model->pet_params.zero_plane_displacement_height_m);
-    model->pet_forcing.wind_speed_m_per_s = model->pet_forcing.wind_speed_m_per_s*numerator/denominator;  // this is the 2 m value
+    if (model->pet_params.wind_speed_measurement_height_m > model->pet_params.zero_plane_displacement_height_m){
+        double numerator=log(2.0/model->pet_params.zero_plane_displacement_height_m);
+        double denominator=log(model->pet_params.wind_speed_measurement_height_m/model->pet_params.zero_plane_displacement_height_m);
+        model->pet_forcing.wind_speed_m_per_s = model->pet_forcing.wind_speed_m_per_s*numerator/denominator;  // this is the 2 m value
+    }
+    // Otherwise, log profile isn't valid...Could use a power law, such as
+    // u(z) = u_ref * (z / z_ref)^α for some exponent α, 
+    // but α varies with stability and surface roughness.
+    // To avoid adding another parameter, though, we will just
+    // Use observed wind speed as 2m value (already warned above)
+    // wind_speed_measurement_height_m <= zero_plane_displacement_height_m. Using observed wind speed as 2m value.\n");
+  
     model->pet_params.wind_speed_measurement_height_m=2.0;  // change because we converted from 10m to 2m height.
     // transfer aorc forcing data into our data structure for surface radiation calculations
     model->surf_rad_forcing.incoming_shortwave_radiation_W_per_sq_m = (double)model->aorc.incoming_shortwave_W_per_m2;
