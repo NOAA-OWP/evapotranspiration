@@ -791,6 +791,24 @@ int read_init_config_pet(pet_model* model, const char* config_file)//,
 
     } // end loop through config
     fclose(fp);
+
+    // Validate parameters here if needed
+    if(model->pet_params.wind_speed_measurement_height_m < model->pet_params.zero_plane_displacement_height_m){
+        // This case is simply invalid and can't be handled gracefully...
+        printf("Error: wind speed measurement height must be greater than or equal to the zero plane displacement height. \n");
+        return BMI_FAILURE;
+    }
+    if (model->pet_params.zero_plane_displacement_height_m <= 0.0){
+        // if displacement height is 0 (or less for some unknown reason...)
+        // set to small value to avoid division by zero in wind profile equation
+        model->pet_params.zero_plane_displacement_height_m = 0.01;
+    }
+    if (model->pet_params.wind_speed_measurement_height_m == model->pet_params.zero_plane_displacement_height_m){
+        // avoid division by zero in wind profile equation when log(1) = 0
+        // compute the profile 1 mm below the measurement height
+        model->pet_params.zero_plane_displacement_height_m -= 0.01;
+    }
+
     return BMI_SUCCESS;
 } // end: read_init_config
 
