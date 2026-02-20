@@ -148,6 +148,12 @@ double calculate_aerodynamic_resistance(pet_model *model)
   if (d >= zh) {
     d = 2.0/3.0 * zh;
   }
+  if(zm != zh) {
+    // This check ensure the logs below are not zero and they are positive
+    // based on the displacement adjustment above.
+    fprintf(stderr,"ERROR: wind speed and humidity measurement heights differ in calculate_aerodynamic_resistance().\n");
+    exit(EXIT_FAILURE);
+  };
   
   ra=log((zm-d)/zom)*log((zh-d)/zoh)/(von_karman_constant_squared*uz);  // this is the equation for the aero. resist.
                                                                       // from the FAO reference PET document.

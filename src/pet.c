@@ -66,7 +66,12 @@ extern int run_pet(pet_model* model)
   {
     if (model->bmi.verbose >1)
         printf("YES AORC \n");
-    
+    // Validate AORC humidity measurement height
+    if(model->pet_params.humidity_measurement_height_m !=2.0)
+    {
+        fprintf(stderr, "ERROR: humidity measurement height is not 2.0 m. Humidity adjustment not yet implemented. Current value: %lf\n", model->pet_params.humidity_measurement_height_m);
+        exit(EXIT_FAILURE);
+    }
     /* jmframe: If we are getting forcing through BMI, then we don't need this, the forcings should already be in place */
     if (model->bmi.is_forcing_from_bmi == 0){
       model->aorc.incoming_longwave_W_per_m2     =  model->forcing_data_incoming_longwave_W_per_m2[model->bmi.current_step];
