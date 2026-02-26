@@ -82,7 +82,23 @@ extern int run_pet(pet_model* model)
       model->aorc.u_wind_speed_10m_m_per_s       =  model->forcing_data_u_wind_speed_10m_m_per_s[model->bmi.current_step];
       model->aorc.v_wind_speed_10m_m_per_s       =  model->forcing_data_v_wind_speed_10m_m_per_s[model->bmi.current_step];
     }
-
+    // NJF: TODO where else may we need to validate these
+    // The setting of forcing to sub model structs in this code is a little wacky
+    // and should probably be refactored...but for now we will just sanity check 
+    // the AORC values here since this is the predominant code path for running pet at the moment...
+    if(model->aorc.air_temperature_2m_K <= 0.0 || model->aorc.air_temperature_2m_K > 350.0){
+        fprintf(stderr, "WARNING: air_temperature_2m_K is out of range. Current value: %lf\nSetting pet to 0", model->aorc.air_temperature_2m_K);
+        model->pet_m_per_s = 0;
+        return 0;
+    }
+    if(model->aorc.incoming_shortwave_W_per_m2 < 0.0){
+        fprintf(stderr, "WARNING: incoming_shortwave_W_per_m2 is negative. Current value: %lf\nSetting to 0", model->aorc.incoming_shortwave_W_per_m2);
+        model->aorc.incoming_shortwave_W_per_m2 = 0.0;
+    }
+    if(model->aorc.incoming_longwave_W_per_m2 < 0.0){
+        fprintf(stderr, "WARNING: incoming_longwave_W_per_m2 is negative. Current value: %lf\nSetting to 0", model->aorc.incoming_longwave_W_per_m2);
+        model->aorc.incoming_longwave_W_per_m2 = 0.0;
+    }
     // jframe: not sure if this belongs here or not, but it needs to happen somewhere.
     model->pet_forcing.specific_humidity_2m_kg_per_kg =  model->aorc.specific_humidity_2m_kg_per_kg;
 
