@@ -15,11 +15,8 @@ double pevapotranspiration_priestley_taylor_method(pet_model *model)
   // local varibles
   double psychrometric_constant_Pa_per_C;
   double slope_sat_vap_press_curve_Pa_s;
-  double moist_air_density_kg_per_m3;
   double water_latent_heat_of_vaporization_J_per_kg;
-  double moist_air_gas_constant_J_per_kg_K;
   double moist_air_specific_humidity_kg_per_m3;
-  double vapor_pressure_deficit_Pa;
   double liquid_water_density_kg_per_m3;
   double lambda_pet;
   double radiation_balance_pevapotranspiration_rate_m_per_s;
@@ -31,10 +28,6 @@ double pevapotranspiration_priestley_taylor_method(pet_model *model)
   calculate_intermediate_variables(model);
 
   liquid_water_density_kg_per_m3 = model->inter_vars.liquid_water_density_kg_per_m3;
-  water_latent_heat_of_vaporization_J_per_kg=model->inter_vars.water_latent_heat_of_vaporization_J_per_kg;
-  vapor_pressure_deficit_Pa=model->inter_vars.vapor_pressure_deficit_Pa;
-  moist_air_gas_constant_J_per_kg_K=model->inter_vars.moist_air_gas_constant_J_per_kg_K;
-  moist_air_density_kg_per_m3=model->inter_vars.moist_air_density_kg_per_m3;
   slope_sat_vap_press_curve_Pa_s=model->inter_vars.slope_sat_vap_press_curve_Pa_s;
   water_latent_heat_of_vaporization_J_per_kg=model->inter_vars.water_latent_heat_of_vaporization_J_per_kg;
   psychrometric_constant_Pa_per_C=model->inter_vars.psychrometric_constant_Pa_per_C;
@@ -42,7 +35,6 @@ double pevapotranspiration_priestley_taylor_method(pet_model *model)
   delta=slope_sat_vap_press_curve_Pa_s;
   gamma=psychrometric_constant_Pa_per_C;
 
-  lambda_pet=0.0;
   if( (model->pet_options.use_aerodynamic_method == FALSE ) && (model->pet_options.use_penman_monteith_method==FALSE) )
   {
     // This is equation 3.5.9 from Chow, Maidment, and Mays textbook.
