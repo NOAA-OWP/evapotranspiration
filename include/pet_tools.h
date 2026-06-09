@@ -1,3 +1,5 @@
+#include "logger.h"
+
 #ifndef PET_TOOLS_H
 #define PET_TOOLS_H
 
@@ -129,9 +131,9 @@ double calculate_aerodynamic_resistance(pet_model *model)
   if(1.0e-06 >= momentum_transfer_roughness_length_m)  
     fprintf(stderr,"momentum_transfer_roughness_length_m is tiny in calculate_aerodynamic_resistance().  Should not be tiny.\n");
   if(1.0e-06 >= heat_transfer_roughness_length_m )  //warn.  Should not be tiny.
-    fprintf(stderr,"heat_transfer_roughness_length_m is tiny in calculate_aerodynamic_resistance().  Should not be tiny.\n");
+    LOG(SEVERE,"heat_transfer_roughness_length_m is tiny in calculate_aerodynamic_resistance().  Should not be tiny.\n");
   if(wind_speed_m_per_s <= 0.0 ) {
-    fprintf(stderr,"WARNING: wind_speed_m_per_s <= in calculate_aerodynamic_resistance(). Setting to 0.01 m/s.\n");
+    LOG(SEVERE,"WARNING: wind_speed_m_per_s <= in calculate_aerodynamic_resistance(). Setting to 0.01 m/s.\n");
     wind_speed_m_per_s = 0.01; // small positive value to avoid divide by zero
   }
   // convert to smaller local variable names to keep equation readable 
@@ -152,6 +154,7 @@ double calculate_aerodynamic_resistance(pet_model *model)
     // This check ensure the logs below are not zero and they are positive
     // based on the displacement adjustment above.
     fprintf(stderr,"ERROR: wind speed and humidity measurement heights differ in calculate_aerodynamic_resistance().\n");
+    LOG(FATAL,"ERROR: wind speed and humidity measurement heights differ in calculate_aerodynamic_resistance().\n");
     exit(EXIT_FAILURE);
   };
   
@@ -177,7 +180,8 @@ double calc_air_saturation_vapor_pressure_Pa(double air_temperature_C)
   if (air_temperature_C <= -237.3)
   {
     fprintf(stderr,"ERROR: air_temperature_C <= -237.3 C in calc_air_saturation_vapor_pressure_Pa().\n");
-    exit(EXIT_FAILURE);
+    LOG(FATAL,"ERROR: air_temperature_C <= -237.3 C in calc_air_saturation_vapor_pressure_Pa().\n");
+    exit(EXIT_FAILURE); 
   }
   double air_sat_vap_press_Pa= 611.0*exp(17.27*air_temperature_C/(237.3+air_temperature_C));  // it is 237.3
 
@@ -418,10 +422,12 @@ void calculate_intermediate_variables(pet_model* model)
   // Validate inputs that could cause numerical errors
   if(model->pet_forcing.air_pressure_Pa <= 0.0) {
     fprintf(stderr, "Error: forcing variable air_pressure_Pa must be greater than zero in calculate_intermediate_variables().\n");
+    LOG(FATAL, "Error: forcing variable air_pressure_Pa must be greater than zero in calculate_intermediate_variables().\n");
     exit(EXIT_FAILURE);
   }
   if(model->pet_forcing.air_temperature_C + TK <= 0.0) {
     fprintf(stderr, "Error: forcing variable air_temperature_C must be greater than %lf in calculate_intermediate_variables().\n", -TK);
+    LOG(FATAL, "forcing variable air_temperature_C must be greater than %lf in calculate_intermediate_variables().\n", -TK);
     exit(EXIT_FAILURE);
   }
   // IF SOIL WATER TEMPERATURE NOT PROVIDED, USE A SANE VALUE

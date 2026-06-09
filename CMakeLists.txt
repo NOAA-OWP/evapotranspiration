@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
+# Uncomment this and rebuild artifacts to enable debugging
+set(CMAKE_BUILD_TYPE Debug)
+
 project(petbmi VERSION 1.0.0 DESCRIPTION "OWP PET BMI Module Shared Library")
 
 # PET
@@ -10,16 +13,36 @@ set(PET_LIB_DESC_CMAKE "OWP PET BMI Module Shared Library")
 add_compile_definitions(BMI_ACTIVE)
 
 if(WIN32)
-    add_library(petbmi src/bmi_pet.c src/pet.c)
+    add_library(petbmi src/bmi_pet.c src/pet.c src/pet_serialization.cpp)
 else()
-    add_library(petbmi SHARED src/bmi_pet.c src/pet.c)
+    add_library(petbmi SHARED src/bmi_pet.c src/pet.c src/pet_serialization.cpp)
 endif()
 
+# -----------------------------------------------------------------------------
+# Find the Boost library and configure usage
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.79.0 REQUIRED COMPONENTS serialization)
+
+target_link_libraries(petbmi PRIVATE Boost::serialization)
 target_include_directories(petbmi PRIVATE include)
 
 set_target_properties(petbmi PROPERTIES VERSION ${PROJECT_VERSION})
 
 set_target_properties(petbmi PROPERTIES PUBLIC_HEADER include/bmi_pet.h)
+
+target_link_libraries(petbmi PRIVATE Boost::serialization)
+
+# --- EWTS (installed from nwm-ewts) ---
+find_package(ewts CONFIG REQUIRED)
+
+# Always use EWTS runtime logger for C
+target_link_libraries(petbmi PRIVATE ewts::ewts_c)
+
+# Built with ngen bridge
+target_link_libraries(petbmi PRIVATE ewts::ewts_ngen_bridge)
+target_compile_definitions(petbmi PRIVATE EWTS_HAVE_NGEN_BRIDGE)
 
 # Code requires minimum of C99 standard to compile
 set_target_properties(petbmi PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED ON)

@@ -15,13 +15,52 @@
 #include "../include/PEtCombinationMethod.h"
 #include "../include/PEtPriestleyTaylorMethod.h"
 #include "../include/PEtPenmanMonteithMethod.h"
+#include "../include/logger.h"
 
 extern void alloc_pet_model(pet_model *model) {
     // TODO: *******************
 }
 
 extern void free_pet_model(pet_model *model) {
-    // TODO: ******************
+    if (model == NULL) {
+        LOG(WARNING, "free_pet_model called with NULL model");
+        return;
+    }
+
+    LOG(DEBUG, "Freeing PET model resources");
+
+    if (model != NULL) {
+      // serialized data
+      if (model->serialized != NULL)
+        free(model->serialized);
+
+      // should be safe to free since it's assigned by copy
+      if (model->forcing_file != NULL)
+        free(model->forcing_file);
+
+      // property arrays
+      if (model->forcing_data_precip_kg_per_m2 != NULL)
+        free(model->forcing_data_precip_kg_per_m2);
+      if (model->forcing_data_surface_pressure_Pa != NULL)
+        free(model->forcing_data_surface_pressure_Pa);
+      if (model->forcing_data_time != NULL)
+        free(model->forcing_data_time);
+      if (model->forcing_data_incoming_longwave_W_per_m2 != NULL)
+        free(model->forcing_data_incoming_longwave_W_per_m2);
+      if (model->forcing_data_incoming_shortwave_W_per_m2 != NULL)
+        free(model->forcing_data_incoming_shortwave_W_per_m2);
+      if (model->forcing_data_specific_humidity_2m_kg_per_kg != NULL)
+        free(model->forcing_data_specific_humidity_2m_kg_per_kg);
+      if (model->forcing_data_air_temperature_2m_K != NULL)
+        free(model->forcing_data_air_temperature_2m_K);
+      if (model->forcing_data_u_wind_speed_10m_m_per_s != NULL)
+        free(model->forcing_data_u_wind_speed_10m_m_per_s);
+      if (model->forcing_data_v_wind_speed_10m_m_per_s != NULL)
+        free(model->forcing_data_v_wind_speed_10m_m_per_s);
+
+      free(model);
+    }
+    LOG(DEBUG, "PET model resources freed");
 }
 
 // ######################    RUN    ########    RUN    ########    RUN    ########    RUN    #################################
@@ -30,13 +69,29 @@ extern void free_pet_model(pet_model *model) {
 // ######################    RUN    ########    RUN    ########    RUN    ########    RUN    #################################
 extern int run_pet(pet_model* model)
 {
-  if (model->bmi.verbose >2){
-    printf("Running the PET model \n");
-    printf("model->bmi.is_forcing_from_bmi %d \n", model->bmi.is_forcing_from_bmi);
+
+  #ifdef EWTS_HAVE_NGEN_BRIDGE
+    EwtsInit(EWTS_ID_PET, true);
+  #else
+    EwtsInit(EWTS_ID_PET, false);
+  #endif
+
+  if (model == NULL) {
+    LOG(FATAL, "run_pet called with NULL model");
+    return 1;
   }
   if (model->pet_params.zero_plane_displacement_height_m <= 0.0){
     fprintf(stderr, "ERROR: zero_plane_displacement_height_m must be > 0.0 m. Current value: %lf\n", model->pet_params.zero_plane_displacement_height_m);
+    LOG(FATAL, "ERROR: zero_plane_displacement_height_m must be > 0.0 m. Current value: %lf\n", model->pet_params.zero_plane_displacement_height_m);
     exit(EXIT_FAILURE);
+  }
+
+  if (model->bmi.verbose > 2) {
+    LOG(DEBUG, "Running PET model");
+    LOG(DEBUG, "is_forcing_from_bmi=%d current_step=%ld current_time=%f",
+            model->bmi.is_forcing_from_bmi,
+            model->bmi.current_step,
+            model->bmi.current_time);
   }
   // populate the evapotranspiration forcing data structure:
   //---------------------------------------------------------------------------------------------------------------
@@ -46,10 +101,18 @@ extern int run_pet(pet_model* model)
                So we would delete the first block in this "if" statement,
                And move the "else" section below the model->aorc.forcings setting block.
   */
-  if (model->bmi.is_forcing_from_bmi == 0){
+
+  if (model->bmi.is_forcing_from_bmi == 0) {
+    if (model->bmi.current_step < 0 || model->bmi.current_step >= model->bmi.num_timesteps) {
+      LOG(SEVERE,
+              "run_pet forcing index out of bounds: current_step=%ld num_timesteps=%ld",
+              model->bmi.current_step, model->bmi.num_timesteps);
+      return -1;
+    }
     model->pet_forcing.air_temperature_C = model->forcing_data_air_temperature_2m_K[model->bmi.current_step] - TK;//convert to C
     model->pet_forcing.relative_humidity_percent     = (double)-99.9; // this negative number means use specific humidity
-    model->pet_forcing.specific_humidity_2m_kg_per_kg = model->forcing_data_precip_kg_per_m2[model->bmi.current_step];
+    //model->pet_forcing.specific_humidity_2m_kg_per_kg = model->forcing_data_precip_kg_per_m2[model->bmi.current_step];
+    model->pet_forcing.specific_humidity_2m_kg_per_kg = model->forcing_data_specific_humidity_2m_kg_per_kg[model->bmi.current_step];
     model->pet_forcing.air_pressure_Pa    = model->forcing_data_surface_pressure_Pa[model->bmi.current_step];
     model->pet_forcing.wind_speed_m_per_s = hypot(model->forcing_data_u_wind_speed_10m_m_per_s[model->bmi.current_step],
                                            model->forcing_data_v_wind_speed_10m_m_per_s[model->bmi.current_step]);                 
@@ -69,9 +132,26 @@ extern int run_pet(pet_model* model)
     // Validate AORC humidity measurement height
     if(model->pet_params.humidity_measurement_height_m !=2.0)
     {
-        fprintf(stderr, "ERROR: humidity measurement height is not 2.0 m. Humidity adjustment not yet implemented. Current value: %lf\n", model->pet_params.humidity_measurement_height_m);
-        exit(EXIT_FAILURE);
+        static int warned = 0;
+
+        if (warned == 0) {
+            LOG(WARNING,
+                "Humidity measurement height must be 2.0 m (adjustment not implemented)."
+                "Received %lf; overriding to 2.0 m.",
+                model->pet_params.humidity_measurement_height_m);
+            warned = 1;
+        }
+        else if (warned == 1) {
+            LOG(WARNING, "Humidity measurement height not 2.0 m again; further warnings suppressed");
+            warned = 2;
+        }
+
+        model->pet_params.humidity_measurement_height_m = 2.0;
+
+	//exit(EXIT_FAILURE); 
     }
+	LOG(DEBUG, "Using AORC forcing pathway");
+    
     /* jmframe: If we are getting forcing through BMI, then we don't need this, the forcings should already be in place */
     if (model->bmi.is_forcing_from_bmi == 0){
       model->aorc.incoming_longwave_W_per_m2     =  model->forcing_data_incoming_longwave_W_per_m2[model->bmi.current_step];
@@ -103,6 +183,20 @@ extern int run_pet(pet_model* model)
     // Use observed wind speed as 2m value (already warned above)
     // wind_speed_measurement_height_m <= zero_plane_displacement_height_m. Using observed wind speed as 2m value.\n");
   
+    double numerator = log(2.0 / model->pet_params.zero_plane_displacement_height_m);
+    double denominator = log(model->pet_params.wind_speed_measurement_height_m /
+                             model->pet_params.zero_plane_displacement_height_m);
+
+    if (denominator == 0.0) {
+        LOG(SEVERE,
+                "Invalid wind-speed height adjustment: denominator is zero "
+                "(wind_height=%f zero_plane=%f)",
+                model->pet_params.wind_speed_measurement_height_m,
+                model->pet_params.zero_plane_displacement_height_m);
+        return 1;
+    }
+
+    model->pet_forcing.wind_speed_m_per_s = model->pet_forcing.wind_speed_m_per_s*numerator/denominator;  // this is the 2 m value
     model->pet_params.wind_speed_measurement_height_m=2.0;  // change because we converted from 10m to 2m height.
     // transfer aorc forcing data into our data structure for surface radiation calculations
     model->surf_rad_forcing.incoming_shortwave_radiation_W_per_sq_m = (double)model->aorc.incoming_shortwave_W_per_m2;
@@ -132,7 +226,7 @@ extern int run_pet(pet_model* model)
   if(model->pet_options.use_aerodynamic_method==0) 
   {
     if (model->bmi.verbose > 1)
-      printf("calculate the net radiation before calling the PET subroutine");
+      LOG(DEBUG, "calculate the net radiation before calling the PET subroutine");
     // NOTE don't call this function use_aerodynamic_method option is TRUE
     model->pet_forcing.net_radiation_W_per_sq_m=calculate_net_radiation_W_per_sq_m(model);
   }
@@ -149,23 +243,40 @@ extern int run_pet(pet_model* model)
     model->pet_m_per_s=pevapotranspiration_penman_monteith_method(model);
 
   // prevent dew from forming (i.e., PET < 0)
-  if(model->pet_m_per_s<0) {
+  if (model->pet_m_per_s < 0) {
+
+    static int warned = 0;
+
+    if (warned == 0) {
+        LOG(WARNING, "Computed PET was negative (%e); clamping to zero", model->pet_m_per_s);
+        warned = 1;
+    }
+    else if (warned == 1) {
+        LOG(WARNING, "Computed PET was negative again; further warnings suppressed");
+        warned = 2;
+    }
+
     model->pet_m_per_s = 0;
   }
 
-  if (model->bmi.verbose >=1){
-    printf("\n");
-    printf("_______________________________________________________________________________\n");
-    if(model->pet_options.use_energy_balance_method ==1)   printf("energy balance method:\n");
-    if(model->pet_options.use_aerodynamic_method ==1)      printf("aerodynamic method:\n");
-    if(model->pet_options.use_combination_method ==1)      printf("combination method:\n");
-    if(model->pet_options.use_priestley_taylor_method ==1) printf("Priestley-Taylor method:\n");
-    if(model->pet_options.use_penman_monteith_method ==1)  printf("Penman Monteith method:\n");
+  if (model->bmi.verbose >= 1) {
+    LOG(INFO, "Calculated instantaneous PET = %8.6e m/s", model->pet_m_per_s);
 
-    printf("calculated instantaneous potential evapotranspiration (PET) =%8.6e m/s\n",model->pet_m_per_s);
+    if (model->pet_options.use_energy_balance_method == 1)
+      LOG(INFO, "PET method: energy balance");
+    if (model->pet_options.use_aerodynamic_method == 1)
+      LOG(INFO, "PET method: aerodynamic");
+    if (model->pet_options.use_combination_method == 1)
+      LOG(INFO, "PET method: combination");
+    if (model->pet_options.use_priestley_taylor_method == 1)
+      LOG(INFO, "PET method: Priestley-Taylor");
+    if (model->pet_options.use_penman_monteith_method == 1)
+      LOG(INFO, "PET method: Penman-Monteith");
+
+    LOG(DEBUG, "calculated instantaneous potential evapotranspiration (PET) =%8.6e m/s\n",model->pet_m_per_s);
     if (model->bmi.verbose > 1)
-      printf("calculated instantaneous potential evapotranspiration (PET) =%8.6lf mm/d\n",model->pet_m_per_s*86400.0*1000.0);
-  
+      LOG(INFO, "Calculated instantaneous PET = %8.6lf mm/d",
+              model->pet_m_per_s * 86400.0 * 1000.0);
   }
 
   return 0;
@@ -177,6 +288,11 @@ extern int run_pet(pet_model* model)
 //########################    SETUP    ########    SETUP    ########    SETUP    ########################################
 void pet_setup(pet_model* model)
 {
+  if (model == NULL) {
+    LOG(FATAL, "pet_setup called with NULL model");
+    return;
+  }
+  LOG(INFO, "Setting up PET model (pet_method=%d)", model->pet_method);
 
   //##########################################################
   // THE VALUE OF THESE FLAGS DETERMINE HOW THIS CODE BEHAVES.
@@ -251,6 +367,8 @@ void pet_setup(pet_model* model)
 
   if(model->pet_options.shortwave_radiation_provided==0)
   {
+    LOG(DEBUG, "Shortwave radiation not provided; PET will calculate solar radiation");
+  
     // populate the elements of the structures needed to calculate shortwave (solar) radiation, and calculate it
     // ### OPTIONS ###
     model->solar_options.cloud_base_height_known=0;  // set to TRUE if the solar_forcing.cloud_base_height_m is known.
@@ -282,39 +400,42 @@ void pet_setup(pet_model* model)
   return;
 }
 
-
 void pet_unit_tests(pet_model* model)
 {
-  printf("\n #----------- BEGIN UNIT TESTS   ---------------# \n");
-  printf("\n # Solar calcs assume LAT & LON from ./configs/pet_config_cat_67.txt# \n");
-  printf("\n # And that pet_doy = 208 & pet_zulu_time = 20.567\n");
+  if (model == NULL) {
+    LOG(SEVERE, "pet_unit_tests called with NULL model");
+    return;
+  }
 
-  printf("\n #-----------       UNIT TEST    ---------------# \n");
-  printf("solar elevation angle is %lf degrees,\n and should be: 43.168329 degrees \n",
-      model->solar_results.solar_elevation_angle_degrees);
-  
-  printf("\n #-----------       UNIT TEST    ---------------# \n");
-  printf("solar azimuth angle is %lf degrees,\n and should be: 224.010087 degrees \n",
-      model->solar_results.solar_azimuth_angle_degrees);
-  
-  printf("\n #-----------       UNIT TEST    ---------------# \n");
-  printf("solar local hour angle is %lf degrees,\n and should be: 30.447448 degrees \n",
-      model->solar_results.solar_local_hour_angle_degrees);
-  printf("\n #-----------       UNIT TEST    ---------------# \n");
+  LOG(INFO, "Beginning PET unit tests");
+  LOG(INFO, "Solar calculations assume LAT/LON from PET config and pet_doy=208, pet_zulu_time=20.567");
+
+  LOG(INFO, "solar elevation angle is %lf degrees, expected 43.168329",
+          model->solar_results.solar_elevation_angle_degrees);
+
+  LOG(INFO, "solar azimuth angle is %lf degrees, expected 224.010087",
+          model->solar_results.solar_azimuth_angle_degrees);
+
+  LOG(INFO, "solar local hour angle is %lf degrees, expected 30.447448",
+          model->solar_results.solar_local_hour_angle_degrees);
+
   if (model->pet_options.use_energy_balance_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.594743e-08 m/s \n", model->pet_m_per_s);
+      LOG(INFO, "potential ET is %8.6e m/s, expected 8.594743e-08",
+              model->pet_m_per_s);
   if (model->pet_options.use_aerodynamic_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.977490e-08 m/s \n", model->pet_m_per_s);
+      LOG(INFO, "potential ET is %8.6e m/s, expected 8.977490e-08",
+              model->pet_m_per_s);
   if (model->pet_options.use_combination_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.694909e-08 m/s \n", model->pet_m_per_s);
+      LOG(INFO, "potential ET is %8.6e m/s, expected 8.694909e-08",
+              model->pet_m_per_s);
   if (model->pet_options.use_priestley_taylor_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 8.249098e-08 m/s \n", model->pet_m_per_s);
+      LOG(INFO, "potential ET is %8.6e m/s, expected 8.249098e-08",
+              model->pet_m_per_s);
   if (model->pet_options.use_penman_monteith_method == 1)
-      printf("potential ET is %8.6e m/s,\n and should be: 7.628671e-08 m/s \n", model->pet_m_per_s);
+      LOG(INFO, "potential ET is %8.6e m/s, expected 7.628671e-08",
+              model->pet_m_per_s);
 
-  printf("\n #------------  END UNIT TESTS   ---------------# \n");
-  printf("\n");
-  printf("\n");
+  LOG(INFO, "Completed PET unit tests");
   return;
 }
 
@@ -332,6 +453,11 @@ void pet_unit_tests(pet_model* model)
 /*####################################################################*/
 void parse_aorc_line_pet(char *theString, long *year, long *month, long *day, long *hour, long *minute, double *second,
                      struct aorc_forcing_data_pet *aorc) {
+    if (theString == NULL || aorc == NULL) {
+        LOG(SEVERE, "parse_aorc_line_pet called with NULL input");
+        return;
+    }
+
     char str[20];
     long yr, mo, da, hr, mi;
     double mm, julian, se;
@@ -344,7 +470,10 @@ void parse_aorc_line_pet(char *theString, long *year, long *month, long *day, lo
 
     char *copy, *copy_to_free, *value;
     copy_to_free = copy = strdup(theString);
-
+    if (copy_to_free == NULL) {
+        LOG(FATAL, "parse_aorc_line_pet failed to duplicate input line");
+        return;
+    }
     // time
     value = strsep(&copy, ",");
     // TODO: handle this
@@ -450,7 +579,7 @@ void itwo_alloc_pet(int ***array, int rows, int cols) {
     int error = 0;
 
     if ((rows == 0) || (cols == 0)) {
-        printf("Error: Attempting to allocate array of size 0\n");
+	LOG(FATAL, "Attempting to allocate int array with zero dimension (rows=%d cols=%d)", rows, cols);
         exit(1);
     }
 
@@ -470,6 +599,12 @@ void itwo_alloc_pet(int ***array, int rows, int cols) {
                 memset((*array)[i], 0, fcols * sizeof(int));
         }
     }
+
+    if (error) {
+        LOG(FATAL, "Failed allocating int matrix at row %d of %d", numgood, frows);
+    } else {
+        LOG(DEBUG, "Allocated int matrix rows=%d cols=%d", rows, cols);
+    }
     return;
 }
 
@@ -479,7 +614,7 @@ void dtwo_alloc_pet(double ***array, int rows, int cols) {
     int error = 0;
 
     if ((rows == 0) || (cols == 0)) {
-        printf("Error: Attempting to allocate array of size 0\n");
+        LOG(FATAL, "Attempting to allocate double array with zero dimension (rows=%d cols=%d)", rows, cols);
         exit(1);
     }
 
@@ -499,6 +634,11 @@ void dtwo_alloc_pet(double ***array, int rows, int cols) {
                 memset((*array)[i], 0, fcols * sizeof(double));
         }
     }
+    if (error) {
+        LOG(FATAL, "Failed allocating double matrix at row %d of %d", numgood, frows);
+    } else {
+        LOG(DEBUG, "Allocated double matrix rows=%d cols=%d", rows, cols);
+    }
     return;
 }
 
@@ -508,7 +648,7 @@ void d_alloc_pet(double **var, int size) {
 
     *var = (double *) malloc(size * sizeof(double));
     if (*var == NULL) {
-        printf("Problem allocating memory for array in d_alloc.\n");
+        LOG(FATAL, "Problem allocating memory for array in d_alloc.\n");
         return;
     } else
         memset(*var, 0, size * sizeof(double));
@@ -520,7 +660,7 @@ void i_alloc_pet(int **var, int size) {
 
     *var = (int *) malloc(size * sizeof(int));
     if (*var == NULL) {
-        printf("Problem allocating memory in i_alloc\n");
+        LOG(FATAL, "Problem allocating memory in i_alloc\n");
         return;
     } else
         memset(*var, 0, size * sizeof(int));

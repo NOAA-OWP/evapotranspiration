@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "../include/pet.h" 
 #include "../include/bmi.h" 
 #include "../include/bmi_pet.h"
@@ -242,6 +243,39 @@ main(int argc, const char *argv[]){
     int test_nstep=1;
     double now;
     printf(" updating... timesteps in test loop: %i\n", test_nstep);
+
+    /*
+     * PET requires physically valid forcing values before update().
+     */
+    double lw_rad = 300.0;
+    double pressure = 101325.0;
+    double rel_humidity = 0.50;
+    double sw_rad = 500.0;
+    double air_temp = 293.15;
+    double wind_u = 2.0;
+    double wind_v = 0.5;
+
+    status = model->set_value(model, "land_surface_radiation~incoming~longwave__energy_flux", &lw_rad);
+    if (status == BMI_FAILURE) return BMI_FAILURE;
+
+    status = model->set_value(model, "land_surface_air__pressure", &pressure);
+    if (status == BMI_FAILURE) return BMI_FAILURE;
+
+    status = model->set_value(model, "atmosphere_air_water~vapor__relative_saturation", &rel_humidity);
+    if (status == BMI_FAILURE) return BMI_FAILURE;
+
+    status = model->set_value(model, "land_surface_radiation~incoming~shortwave__energy_flux", &sw_rad);
+    if (status == BMI_FAILURE) return BMI_FAILURE;
+
+    status = model->set_value(model, "land_surface_air__temperature", &air_temp);
+    if (status == BMI_FAILURE) return BMI_FAILURE;
+
+    status = model->set_value(model, "land_surface_wind__x_component_of_velocity", &wind_u);
+    if (status == BMI_FAILURE) return BMI_FAILURE;
+
+    status = model->set_value(model, "land_surface_wind__y_component_of_velocity", &wind_v);
+    if (status == BMI_FAILURE) return BMI_FAILURE;
+
     for (int n=1;n<=test_nstep;n++) // shorter time loop for testing
     {
         // Test BMI: CONTROL FUNCTION update()
@@ -385,6 +419,28 @@ main(int argc, const char *argv[]){
     }
     free(names_out);
     free(names_in);
+    /*
+     * Restore valid PET forcing values before update_until().
+     * The generic set_value_*() tests above overwrite all BMI
+     * variables with synthetic values like 11.1 and -11.1.
+     * For PET temperature forcing, 11.1 K is physically invalid.
+     */
+    lw_rad = 300.0;
+    pressure = 101325.0;
+    rel_humidity = 0.50;
+    sw_rad = 500.0;
+    air_temp = 293.15;
+    wind_u = 2.0;
+    wind_v = 0.5;
+
+    model->set_value(model, "land_surface_radiation~incoming~longwave__energy_flux", &lw_rad);
+    model->set_value(model, "land_surface_air__pressure", &pressure);
+    model->set_value(model, "atmosphere_air_water~vapor__relative_saturation", &rel_humidity);
+    model->set_value(model, "land_surface_radiation~incoming~shortwave__energy_flux", &sw_rad);
+    model->set_value(model, "land_surface_air__temperature", &air_temp);
+    model->set_value(model, "land_surface_wind__x_component_of_velocity", &wind_u);
+    model->set_value(model, "land_surface_wind__y_component_of_velocity", &wind_v);
+
     // Test BMI: CONTROL FUNCTION update_until()
     {
         int added_nstep=5;
